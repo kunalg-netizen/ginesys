@@ -393,7 +393,7 @@ select option{background:var(--white);color:var(--ink)}
 .compliance-table tbody tr:last-child{border-bottom:none}
 .compliance-table tbody tr:hover{background:var(--bg)}
 .compliance-table td{padding:12px 14px;font-size:.83rem;color:var(--ink);vertical-align:middle}
-.compliance-table td.td-name{font-weight:500;color:var(--ink);font-family:'Bricolage Grotesque',sans-serif;font-size:.9rem;letter-spacing:-.02em}
+.compliance-table td.td-name{font-weight:500;color:var(--ink);font-family:'Figtree',sans-serif;font-size:.78rem;letter-spacing:normal}
 .compliance-table td.td-type span{display:inline-block;padding:3px 9px;border-radius:99px;font-size:.7rem;font-weight:700;font-family:'JetBrains Mono',monospace}
 .compliance-table td.td-task a{color:var(--accent);text-decoration:none;font-weight:600;font-size:.8rem;cursor:pointer}
 .compliance-table td.td-task a:hover{text-decoration:underline}
@@ -926,7 +926,7 @@ select option{background:var(--white);color:var(--ink)}
           </select>
           <button class="btn btn-ghost btn-sm" id="cfBtn" onclick="clearFilters()" style="display:none">✕ Clear</button>
           <span class="tc" id="taskCount"></span>
-          <button class="btn-new-task" id="newPersonalTaskBtn" onclick="openTaskModal(null,'personal')" style="margin-left:auto;display:none">＋ Personal Task</button>
+          <button class="btn-new-task" id="newPersonalTaskBtn" onclick="openTaskModal(null,'personal')" style="margin-left:auto;display:none">＋ Task</button>
           <button class="btn-new-task" id="newTaskBtn" onclick="openTaskModal()" style="display:none">＋ New Task</button>
           <button class="btn btn-ghost btn-sm" id="tplBtn" onclick="openTemplates()" style="display:none" title="Task templates">📋 Template</button>
         </div>
@@ -1459,7 +1459,7 @@ select option{background:var(--white);color:var(--ink)}
               <div id="cMemberName" style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:.95rem;color:var(--ink);margin-bottom:2px;letter-spacing:-.02em"></div>
               <div id="cMemberMeta" style="font-size:.75rem;color:var(--ink-mid)"></div>
               <div style="font-size:.74rem;color:var(--ink-mid);margin-top:8px;padding-top:8px;border-top:1px solid var(--accent-mid)">
-                Please fill in the <strong>Submit Date</strong> and <strong>Filing Date</strong> below.
+                Please fill in the <strong>Status</strong>, <strong>Submit Date</strong> and <strong>Filing Date</strong> below.
               </div>
             </div>
             <div class="form-row" id="cAdminRow1">
@@ -1545,6 +1545,107 @@ select option{background:var(--white);color:var(--ink)}
           </div>
         </div>
       </div>
+
+<!-- TASK MODAL -->
+<div class="overlay" id="taskModal" style="display:none" onclick="if(event.target===this)closeTaskModal()">
+  <div class="modal" style="max-width:600px;max-height:90vh;overflow-y:auto">
+    <div class="modal-header" style="position:sticky;top:0;background:var(--white);z-index:2">
+      <div class="modal-title" id="tmTitle">New Task</div>
+      <button class="icon-btn" onclick="closeTaskModal()">✕</button>
+    </div>
+    <div class="form-body">
+      <input type="hidden" id="editId">
+      <input type="hidden" id="taskSource" value="team">
+      <div class="fg">
+        <label>Task Title *</label>
+        <input class="input" id="tTitle" placeholder="Enter task title…">
+      </div>
+      <div class="fg">
+        <label>Description</label>
+        <div class="input" id="tDesc" contenteditable="true" style="min-height:64px;resize:vertical;overflow:auto" placeholder="Optional description…"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg">
+          <label>Status</label>
+          <select class="input" id="tStatus">
+            <option value="todo">To Do</option>
+            <option value="in_progress">In Progress</option>
+            <option value="review">In Review</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Priority</label>
+          <select class="input" id="tPriority">
+            <option value="critical">🔴 Critical</option>
+            <option value="high">🟠 High</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="low">🟢 Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="fg">
+          <label>Due Date</label>
+          <input class="input" type="date" id="tDue">
+        </div>
+        <div class="fg">
+          <label>Estimated Time (hrs)</label>
+          <input class="input" type="number" id="tEstimate" placeholder="e.g. 2.5" min="0" step="0.5">
+        </div>
+      </div>
+      <!-- Assignee row (hidden for personal tasks) -->
+      <div id="assigneeRow" class="fg" style="display:grid">
+        <label>Assign To</label>
+        <select class="input" id="tAssignee">
+          <option value="">— Unassigned —</option>
+        </select>
+        <div class="info-box" id="emailNote" style="margin-top:6px">✅ EmailJS configured!</div>
+      </div>
+      <!-- Personal task note (hidden for team tasks) -->
+      <div id="personalAssigneeNote" style="display:none;background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);padding:9px 12px;font-size:.78rem;color:var(--accent)">👤 This task will be assigned to you personally.</div>
+      <!-- Tags -->
+      <div class="fg">
+        <label>Tags</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:5px" id="tagBadges"></div>
+        <input class="input" id="tagInput" placeholder="Type a tag and press Enter or comma…" onkeydown="handleTagKey(event)">
+      </div>
+      <!-- Subtasks -->
+      <div class="fg">
+        <label>Subtasks</label>
+        <div id="subtaskList" style="margin-bottom:6px"></div>
+        <div style="display:flex;gap:6px">
+          <input class="input" id="subtaskInput" placeholder="Add subtask…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addSubtask();}">
+          <button class="btn btn-ghost btn-sm" onclick="addSubtask()" style="white-space:nowrap">＋ Add</button>
+        </div>
+      </div>
+      <!-- Recurring -->
+      <div class="fg">
+        <label>🔄 Recurring</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="recur-btn active" data-v="" onclick="setRecur(this,'')">None</button>
+          <button class="recur-btn" data-v="daily" onclick="setRecur(this,'daily')">Daily</button>
+          <button class="recur-btn" data-v="weekly" onclick="setRecur(this,'weekly')">Weekly</button>
+          <button class="recur-btn" data-v="monthly" onclick="setRecur(this,'monthly')">Monthly</button>
+        </div>
+      </div>
+      <!-- Color Label -->
+      <div class="fg">
+        <label>Card Color</label>
+        <div id="colorPicker" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <!-- Attachment link -->
+      <div class="fg">
+        <label>🔗 Attachment / Ticket Link</label>
+        <input class="input" type="url" id="tLink" placeholder="https://…">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeTaskModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTask()" style="width:auto">Save Task →</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="templateModal" style="display:none" onclick="if(event.target===this)closeTemplates()">
   <div class="modal modal-lg">
@@ -1930,6 +2031,7 @@ window.handleTagKey=function(e){
 };
 function renderPendingTags(){const c=document.getElementById('tagBadges');if(!c)return;c.innerHTML=pendingTags.map((t,i)=>{const tc=tagColor(t);return`<span class="tag-badge" style="background:${tc.bg};border:1px solid ${tc.border};color:${tc.color}">${esc(t)}<button onclick="removeTag(${i})" type="button">×</button></span>`;}).join('');}
 window.removeTag=function(i){pendingTags.splice(i,1);renderPendingTags();};
+window.setRecur=function(btn,val){pendingRecur=val;document.querySelectorAll('.recur-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===val));};
 
 // ── SUBTASKS ──
 window.addSubtask=function(){const inp=document.getElementById('subtaskInput');const val=inp.value.trim();if(!val)return;pendingSubtasks.push({text:val,done:false,id:uid()});inp.value='';renderPendingSubtasks();};
@@ -2279,7 +2381,7 @@ function updateUserHeader(){
 function updateDashboardButtons(){
   const isAdm=isAdmin();
   const nb=document.getElementById('newTaskBtn');const pb=document.getElementById('newPersonalTaskBtn');const tb=document.getElementById('tplBtn');
-  if(nb)nb.style.display=(currentDashboard==='team'&&isAdm)?'':'none';
+  if(nb)nb.style.display=(currentDashboard==='team'&&isAdm)?'inline-flex':'none';
   if(pb)pb.style.display=currentDashboard==='personal'?'':'none';
   if(tb)tb.style.display=isAdm?'inline-flex':'none';
 }
@@ -2317,7 +2419,7 @@ window.switchDashboard=function(dash){
   filters={status:'',priority:'',assignee:'',dueFilter:''};
   const si=document.getElementById('searchInput');if(si)si.value='';
   document.getElementById('cfBtn').style.display='none';
-  closeDetail();updateDashboardButtons();updateDashboardCounts();renderAll();
+  closeDetail();updateDashboardButtons();updateDashboardCounts();renderTasks();renderSidebar();
 };
 
 // Open notes panel (called from the My Notes shortcut button)
@@ -2448,6 +2550,8 @@ function renderAll(){updateDashboardCounts();renderSidebar();if(currentViewMode=
 
 // ── SIDEBAR ──
 function renderSidebar(){
+  if(document.getElementById('dashTeamBtn')?.classList.contains('active'))currentDashboard='team';
+  else if(document.getElementById('dashPersonalBtn')?.classList.contains('active'))currentDashboard='personal';
   let st;
   if(currentDashboard==='personal'){st=tasks.filter(t=>(t.source||'team')==='personal'&&t.createdBy===currentUser?.uid&&!t.archived);}
   else{const tt=tasks.filter(t=>(t.source||'team')!=='personal'&&!t.archived);st=isAdmin()?tt:tt.filter(t=>!t.assigneeId||t.assigneeId===currentUser?.uid);}
@@ -2513,7 +2617,7 @@ function taskCardHtml(t,isPersonal=false,groupBy='priority'){
   const isSelected=selectedTasks.has(t.id);
   const timer=timers[t.id];const isTimerRunning=timer?.start;
   const cardStyle=t.color?`border-left:4px solid ${t.color};`:'';
-  return`<div class="task-card${isSelected?' selected':''}" id="tc_${t.id}" style="${cardStyle}" onclick="openDetail('${t.id}')"
+  return`<div class="task-card${isSelected?' selected':''}" id="tc_${t.id}" style="${cardStyle}" onclick="openDetail('${t.id}')" ondblclick="event.stopPropagation();openTaskModal('${t.id}')"
     draggable="true" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event,'${t.id}')">
     <button class="card-select-btn" title="Select task" onclick="toggleSelectTask(event,'${t.id}')"></button>
     <button class="card-menu-btn" onclick="openCardMenu(event,'${t.id}')">⋯</button>
@@ -2563,7 +2667,10 @@ function taskListRowHtml(t,isPersonal=false){
 
 // ── RENDER TASKS ──
 function renderTasks(){
-  if(currentView!=='tasks')return;if(currentViewMode==='calendar'){renderCalendar();return;}if(currentViewMode==='workload'){renderWorkload();return;}
+  if(currentView!=='tasks')return;
+  if(document.getElementById('dashTeamBtn')?.classList.contains('active'))currentDashboard='team';
+  else if(document.getElementById('dashPersonalBtn')?.classList.contains('active'))currentDashboard='personal';
+  if(currentViewMode==='calendar'){renderCalendar();return;}if(currentViewMode==='workload'){renderWorkload();return;}
   const f=getFiltered();
   document.getElementById('cfBtn').style.display=hasActiveFilters()?'':'none';
   document.getElementById('taskCount').textContent=`${f.length} task${f.length!==1?'s':''}`;
@@ -3592,7 +3699,7 @@ window.openComplianceModal=function(cid){
   if(assigneeSel){assigneeSel.innerHTML=`<option value="">— Unassigned —</option>`+members.map(m=>`<option value="${m.id}" ${c?.assigneeId===m.id?'selected':''}>${esc(m.name)}</option>`).join('');}
 
   // ── ROLE-BASED FIELD VISIBILITY ──
-  const adminOnlyIds=['cAdminRow1','cAdminRow2','cAdminRecur','cAdminAssignee','cAdminStatus','cAdminRemarks'];
+  const adminOnlyIds=['cAdminRow1','cAdminRow2','cAdminRecur','cAdminAssignee','cAdminRemarks'];
   adminOnlyIds.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=memberMode?'none':'';});
 
   // Member banner: show record name + meta info
@@ -3624,6 +3731,7 @@ window.saveCompliance=async function(){
     await update(ref(db,`compliance/${eid}`),{
       submitDate:document.getElementById('cSubmitDate').value||null,
       filingDate:document.getElementById('cFilingDate').value||null,
+      status:document.getElementById('cStatus').value||null,
       updatedAt:Date.now()
     });
     closeComplianceModal();
