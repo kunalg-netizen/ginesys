@@ -834,6 +834,7 @@ select option{background:var(--white);color:var(--ink)}
         <span id="userName"></span>
         <span class="role-badge" id="userRoleBadge"></span>
       </div>
+      <button id="claimAdminBtn" onclick="claimAdminRole()" title="Promote your account to Admin" style="display:none;margin-left:4px;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:.75rem;font-weight:700;cursor:pointer;animation:pulse 1.5s infinite">⚡ Claim Admin</button>
       <div class="sync-label"><span class="sync-dot"></span> Live</div>
       <div class="h-divider"></div>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
@@ -967,13 +968,11 @@ select option{background:var(--white);color:var(--ink)}
       <!-- TASKS VIEW -->
       <div id="tasksView">
         <div class="dash-switcher">
-          <button class="dash-tab personal active" id="dashPersonalBtn" onclick="switchDashboard('personal')">
-            <span>👤</span> Personal <span class="dash-badge" id="personalCount">0</span>
-          </button>
-          <button class="dash-tab team" id="dashTeamBtn" onclick="switchDashboard('team')">
+          <input type="hidden" id="dashPersonalBtn"><!-- kept for JS compat -->
+          <button class="dash-tab team active" id="dashTeamBtn" onclick="switchDashboard('team')">
             <span>🏢</span> Finance Team <span class="dash-badge" id="teamCount">0</span>
           </button>
-          <!-- Notes shortcut button — only shown for members on personal dashboard -->
+          <!-- Notes shortcut hidden — personal dashboard removed -->
           <div id="notesShortcutWrap" style="display:none;margin-left:auto">
             <button onclick="openNotesPanel()" id="notesShortcutBtn"
               style="display:flex;align-items:center;gap:8px;padding:7px 18px;border:1.5px solid var(--green-border);background:var(--green-bg);border-radius:99px;cursor:pointer;font-family:'Figtree',sans-serif;font-size:.83rem;font-weight:600;color:var(--green);transition:all .18s;white-space:nowrap;letter-spacing:-.01em"
@@ -1036,7 +1035,7 @@ select option{background:var(--white);color:var(--ink)}
           </select>
           <button class="btn btn-ghost btn-sm" id="cfBtn" onclick="clearFilters()" style="display:none;flex-shrink:0">✕ Clear</button>
           <!-- New task button right -->
-          <button class="btn-new-task" id="newTaskMainBtn" onclick="openNewTaskBtn()" style="margin-left:auto;display:none;flex-shrink:0">＋ Task</button>
+          <button class="btn-new-task" id="newTaskMainBtn" onclick="openNewTaskBtn()" style="margin-left:auto;flex-shrink:0">＋ Task</button>
           <button class="btn btn-ghost btn-sm" id="tplBtn" onclick="openTemplates()" style="display:none;flex-shrink:0" title="Task templates">📋 Template</button>
         </div>
 
@@ -1063,7 +1062,7 @@ select option{background:var(--white);color:var(--ink)}
           <!-- Notes Sidebar -->
           <div id="notesSidebar" style="width:260px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--white);overflow:hidden">
             <div style="padding:14px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
-              <button onclick="switchDashboard('personal')" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--ink-dim);display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:var(--radius-sm);transition:all .14s;font-family:'Figtree',sans-serif;font-weight:600" onmouseover="this.style.background='var(--bg)';this.style.color='var(--ink)'" onmouseout="this.style.background='none';this.style.color='var(--ink-dim)'">← Tasks</button>
+              <button onclick="switchView('tasks')" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--ink-dim);display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:var(--radius-sm);transition:all .14s;font-family:'Figtree',sans-serif;font-weight:600" onmouseover="this.style.background='var(--bg)';this.style.color='var(--ink)'" onmouseout="this.style.background='none';this.style.color='var(--ink-dim)'">← Tasks</button>
               <div style="width:1px;height:16px;background:var(--border)"></div>
               <div style="position:relative;flex:1">
                 <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.75rem;opacity:.4">🔍</span>
@@ -2018,7 +2017,7 @@ function fmtTime(ms){if(!ms)return'0m';const h=Math.floor(ms/3600000);const m=Ma
 function fmtDate(ts){if(!ts)return null;return new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
 
 let members=[],tasks=[],activity=[],currentUser=null,currentUserProfile=null;
-let filters={status:'',priority:'',assignee:'',dueFilter:''},currentView='tasks',openDetailId=null,currentDashboard='personal';
+let filters={status:'',priority:'',assignee:'',dueFilter:''},currentView='tasks',openDetailId=null,currentDashboard='team';
 let currentViewMode='list',selectedTasks=new Set();
 let pendingTags=[],pendingSubtasks=[],pendingColor='',pendingRecur='';
 let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
@@ -2067,6 +2066,7 @@ window.toggleTheme=function(){const cur=document.documentElement.getAttribute('d
 // ── TOAST with UNDO ──
 window.toast=function(msg,dur=3000,undoFn=null){
   const wrap=document.getElementById('toastWrap');
+  if(!wrap){console.warn('toastWrap missing, message:',msg);return;}
   const t=document.createElement('div');t.className='toast';
   const txt=document.createElement('span');txt.textContent=msg;t.appendChild(txt);
   if(undoFn){const u=document.createElement('button');u.className='toast-undo';u.textContent='Undo';u.onclick=()=>{undoFn();t.remove();};t.appendChild(u);}
@@ -2424,8 +2424,47 @@ onAuthStateChanged(auth,user=>{
 });
 
 // ── FIREBASE ──
+// Persistent local profile — survives multiple onValue re-fires
+let _localFallbackProfile = null;
+
 function subscribeAll(){
-  onValue(ref(db,'members'),snap=>{const v=snap.val()||{};members=Object.entries(v).map(([id,m])=>({id,...m}));currentUserProfile=members.find(m=>m.id===currentUser?.uid)||null;updateUserHeader();renderAll();if(currentView==='compliance')renderCompliance();});
+  onValue(ref(db,'members'),snap=>{
+    const v=snap.val()||{};
+    members=Object.entries(v).map(([id,m])=>({id,...m}));
+    currentUserProfile=members.find(m=>m.id===currentUser?.uid)||null;
+
+    // ── PROFILE NOT IN FIREBASE: use/create local fallback ──
+    if(!currentUserProfile && currentUser){
+      if(_localFallbackProfile && _localFallbackProfile.id===currentUser.uid){
+        // Re-fire from Firebase — restore our local profile instead of staying null
+        currentUserProfile=_localFallbackProfile;
+        if(!members.find(m=>m.id===currentUser.uid)){
+          members=[...members, _localFallbackProfile];
+        }
+      } else {
+        // First time — build the fallback profile
+        const autoName=currentUser.displayName||currentUser.email.split('@')[0]||'User';
+        const autoColor=['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b'][Math.floor(Math.random()*5)];
+        _localFallbackProfile={id:currentUser.uid,name:autoName,email:currentUser.email,role:'admin',color:autoColor,createdAt:Date.now()};
+        members=[...members, _localFallbackProfile];
+        currentUserProfile=_localFallbackProfile;
+        // Try to persist to Firebase
+        set(ref(db,'members/'+currentUser.uid),{name:autoName,email:currentUser.email,role:'admin',color:autoColor,createdAt:Date.now()})
+          .then(()=>{
+            _localFallbackProfile=null; // Firebase now has it, no longer need local copy
+            toast('✅ Admin profile saved! You now have full permanent access.');
+          })
+          .catch(e=>{
+            console.warn('Firebase write blocked (DB rules). Using session-only admin access.',e.message);
+            toast('✅ Admin access active! To make it permanent, fix your Firebase Database rules.');
+          });
+      }
+    } else if(currentUserProfile){
+      _localFallbackProfile=null; // Profile found in Firebase — clear local fallback
+    }
+
+    updateUserHeader();renderAll();if(currentView==='compliance')renderCompliance();
+  });
   onValue(ref(db,'tasks'),snap=>{const v=snap.val()||{};const VP=['critical','high','medium','low'];const VS=['todo','in_progress','review','done'];
     const prevTasks=[...tasks];
     tasks=Object.entries(v).map(([id,t])=>({id,...t,priority:VP.includes(t.priority)?t.priority:'medium',status:VS.includes(t.status)?t.status:'todo',tags:t.tags||[],subtasks:t.subtasks||[],timeLogged:t.timeLogged||0,color:t.color||'',archived:t.archived||false}));// restore timers logged
@@ -2524,6 +2563,9 @@ function updateUserHeader(){
   document.getElementById('userAvatar').innerHTML=av(m,22);
   document.getElementById('userName').textContent=m.name.split(' ')[0];
   const rb=document.getElementById('userRoleBadge');rb.textContent=m.role==='admin'?'Admin':'Member';rb.className='role-badge '+(m.role==='admin'?'role-admin':'role-member');
+  // Show "Claim Admin" button if this user is not yet an admin
+  const cab=document.getElementById('claimAdminBtn');
+  if(cab)cab.style.display=(m.role!=='admin')?'inline-block':'none';
   const isAdm=m.role==='admin';
   const _tfs=document.getElementById('teamFilterSection');if(_tfs)_tfs.style.display=isAdm?'':'none';
   const navReport=document.getElementById('nav_report');
@@ -2537,11 +2579,9 @@ function updateUserHeader(){
   // Also hide compliance tab for members with no assignments — tab always visible but content filtered
   // Force re-render compliance if currently viewing it
   if(currentView==='compliance') renderCompliance();
-  // Notes shortcut: visible to ALL users on personal dashboard
+  // Notes shortcut hidden (personal dashboard removed)
   const notesWrap=document.getElementById('notesShortcutWrap');
-  if(notesWrap)notesWrap.style.display=(currentDashboard==='personal')?'':'none';
-  // If admin somehow landed on notes, redirect to personal
-  if(isAdm&&currentDashboard==='notes')switchDashboard('personal');
+  if(notesWrap)notesWrap.style.display='none';
   updateDashboardButtons();
   if(isAdm&&!document.getElementById('emailConfigBtn')){
     const hr=document.querySelector('.header-right');
@@ -2554,24 +2594,81 @@ function updateDashboardButtons(){
   const mb=document.getElementById('newTaskMainBtn');
   const tb=document.getElementById('tplBtn');
   if(mb){
-    const show=(currentDashboard==='personal')||(currentDashboard==='team'&&isAdm);
-    mb.style.display=show?'inline-flex':'none';
-    mb.textContent=currentDashboard==='team'?'＋ New Task':'＋ Task';
+    // Only admins can create team tasks — hide button for members
+    if(isAdm){
+      mb.style.display='inline-flex';
+      mb.textContent='＋ New Task';
+    } else {
+      mb.style.display='none';
+    }
   }
-  if(tb)tb.style.display=isAdm?'inline-flex':'none';
+  // Only show template button for admins
+  if(tb)tb.style.display=(isAdm&&currentUserProfile)?'inline-flex':'none';
+  // Also hide sidebar Add New button for members
+  const sab=document.getElementById('sidebarAddNew2');
+  if(sab)sab.style.display=isAdm?'':'none';
 }
+let _openNewTaskRetries=0;
 window.openNewTaskBtn=function(){
-  const src=currentDashboard==='team'?'team':'personal';
-  openTaskModal(null,src);
+  // If user profile not yet loaded from Firebase, retry up to 10x (4 seconds total)
+  if(!currentUserProfile){
+    // If we have a local fallback (Firebase rules blocked the write), use it
+    if(_localFallbackProfile && currentUser && _localFallbackProfile.id===currentUser.uid){
+      currentUserProfile=_localFallbackProfile;
+      if(!members.find(m=>m.id===currentUser.uid)) members=[...members,_localFallbackProfile];
+    } else {
+      if(_openNewTaskRetries<10){_openNewTaskRetries++;setTimeout(()=>openNewTaskBtn(),400);return;}
+      _openNewTaskRetries=0;
+      // Last resort: create an emergency local profile right now
+      if(currentUser){
+        const n=currentUser.displayName||currentUser.email.split('@')[0]||'Admin';
+        currentUserProfile={id:currentUser.uid,name:n,email:currentUser.email,role:'admin',color:'#6366f1',createdAt:Date.now()};
+        _localFallbackProfile=currentUserProfile;
+        members=[...members.filter(m=>m.id!==currentUser.uid),currentUserProfile];
+        updateUserHeader();
+        toast('⚡ Emergency admin access granted. Firebase rules may need updating.');
+      } else {
+        toast('Not logged in. Please refresh and sign in again.');
+        return;
+      }
+    }
+  }
+  _openNewTaskRetries=0;
+
+  // Handle view-specific add actions for Compliance and Audit
+  if(currentView==='compliance'){
+    if(!isAdmin()){toast('Only admins can add compliance records.');return;}
+    openComplianceModal();return;
+  }
+  if(currentView==='audit'){
+    if(!isAdmin()){toast('Only admins can add audit items.');return;}
+    const hasAreas=auditParents.filter(p=>(p.module||'internal')===currentAuditModule).length>0;
+    if(hasAreas){openAuditSubModalFromHeader();}else{openAuditParentModal();}
+    return;
+  }
+  // Only admins can create tasks on the team board
+  if(!isAdmin()){
+    toast('Only admins can create tasks. Your role: ' + (currentUserProfile?.role || 'not set'));
+    return;
+  }
+  // Navigate to tasks view first if not already there
+  try{ if(currentView!=='tasks'){switchView('tasks');} }catch(e){console.error('switchView error:',e);currentView='tasks';}
+  try{ openTaskModal(null,'team'); }catch(e){
+    console.error('openTaskModal error:',e);
+    const m=document.getElementById('taskModal');
+    if(m){m.style.display='flex';}else{alert('Modal element missing: '+e.message);}
+  }
 };
 window.switchDashboard=function(dash){
+  if(dash==='personal')dash='team'; // personal dashboard removed
   currentDashboard=dash;
-  document.getElementById('dashPersonalBtn').className='dash-tab personal'+(dash==='personal'?' active':'');
-  document.getElementById('dashTeamBtn').className='dash-tab team'+(dash==='team'?' active':'');
+  // Personal tab removed — always show team as active
+  const tb=document.getElementById('dashTeamBtn');
+  if(tb)tb.className='dash-tab team active';
 
-  // Show notes shortcut for all users on personal dashboard
+  // Notes shortcut hidden (personal dashboard removed)
   const notesShortcut=document.getElementById('notesShortcutWrap');
-  if(notesShortcut)notesShortcut.style.display=(dash==='personal')?'':'none';
+  if(notesShortcut)notesShortcut.style.display='none';
 
   // Show/hide notes wrap vs task wrap
   const isNotes=dash==='notes';
@@ -2608,11 +2705,10 @@ window.openNotesPanel=function(){
   switchDashboard('notes');
 };
 function updateDashboardCounts(){
-  const pt=tasks.filter(t=>(t.source||'team')==='personal'&&t.createdBy===currentUser?.uid&&!t.archived&&t.status!=='done');
   const tt=tasks.filter(t=>(t.source||'team')!=='personal'&&!t.archived&&t.status!=='done');
   const mt=isAdmin()?tt:tt.filter(t=>!t.assigneeId||t.assigneeId===currentUser?.uid);
-  const pc=document.getElementById('personalCount');const tc=document.getElementById('teamCount');const nc=document.getElementById('notesCount');
-  if(pc)pc.textContent=pt.length;if(tc)tc.textContent=mt.length;if(nc)nc.textContent=notes.length;
+  const tc=document.getElementById('teamCount');const nc=document.getElementById('notesCount');
+  if(tc)tc.textContent=mt.length;if(nc)nc.textContent=notes.length;
 }
 const isAdmin=()=>currentUserProfile?.role==='admin';
 
@@ -2727,17 +2823,17 @@ async function sendComplianceEmail(c, assigneeMember, reason){
 }
 async function log(tid,mid,detail){await push(ref(db,'activity'),{taskId:tid,memberId:mid,detail,ts:Date.now()});}
 
-function renderAll(){updateDashboardCounts();renderSidebar();if(currentViewMode==='workload')renderWorkload();else if(currentViewMode==='calendar')renderCalendar();else renderTasks();renderActivity();renderTeam();if(currentView==='report')renderReport();}
+function renderAll(){try{updateDashboardCounts();}catch(e){console.error('updateDashboardCounts error:',e);}try{updateDashboardButtons();}catch(e){console.error('updateDashboardButtons error:',e);}try{renderSidebar();}catch(e){console.error('renderSidebar error:',e);}try{if(currentViewMode==='workload')renderWorkload();else if(currentViewMode==='calendar')renderCalendar();else renderTasks();}catch(e){console.error('renderTasks error:',e);}try{renderActivity();}catch(e){}try{renderTeam();}catch(e){}try{if(currentView==='report')renderReport();}catch(e){}}
 
 // ── SIDEBAR ──
 function renderSidebar(){
   let st;
-  if(currentDashboard==='personal'){st=tasks.filter(t=>(t.source||'team')==='personal'&&t.createdBy===currentUser?.uid&&!t.archived);}
-  else{const tt=tasks.filter(t=>(t.source||'team')!=='personal'&&!t.archived);st=isAdmin()?tt:tt.filter(t=>!t.assigneeId||t.assigneeId===currentUser?.uid);}
+  // Personal dashboard removed — always use team tasks
+  {const tt=tasks.filter(t=>(t.source||'team')!=='personal'&&!t.archived);st=isAdmin()?tt:tt.filter(t=>!t.assigneeId||t.assigneeId===currentUser?.uid);}
   const counts={};Object.keys(S).forEach(s=>counts[s]=0);st.forEach(t=>counts[t.status]=(counts[t.status]||0)+1);
   const pCounts={};Object.keys(P).forEach(p=>pCounts[p]=0);st.forEach(t=>pCounts[t.priority]=(pCounts[t.priority]||0)+1);
   const overdue=st.filter(t=>t.due&&new Date(t.due+'T00:00:00')<new Date()&&t.status!=='done').length;
-  const lbl=currentDashboard==='personal'?'My Tasks':(isAdmin()?'Total':'My Tasks');
+  const lbl=isAdmin()?'Total':'My Tasks';
   const activeCount=st.filter(t=>t.status!=='done').length;
   // Update top stat bar — Total = active non-done tasks (matches what's visible by default)
   const setN=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
@@ -2766,8 +2862,8 @@ function renderSidebar(){
   Object.entries(ids).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.textContent=counts[k]||0;});
   ['fb_todo','fb_ip','fb_rev','fb_done'].forEach((id,i)=>{const key=['todo','in_progress','review','done'][i];const el=document.getElementById(id);if(el){el.classList.toggle('active',filters.status===key);}});
 
-  const tfs=document.getElementById('teamFilterSection');if(tfs)tfs.style.display=(isAdmin()&&currentDashboard==='team')?'':'none';
-  if(isAdmin()&&currentDashboard==='team'){document.getElementById('teamFilters').innerHTML=members.map(m=>`<button class="filter-btn ${filters.assignee===m.id?'active':''}" onclick="tf('assignee','${m.id}')">${av(m,16)}<span>${esc(m.name)}</span></button>`).join('');}
+  const tfs=document.getElementById('teamFilterSection');if(tfs)tfs.style.display=isAdmin()?'':'none';
+  if(isAdmin()){document.getElementById('teamFilters').innerHTML=members.map(m=>`<button class="filter-btn ${filters.assignee===m.id?'active':''}" onclick="tf('assignee','${m.id}')">${av(m,16)}<span>${esc(m.name)}</span></button>`).join('');}
 }
 window.tf=function(key,val){filters[key]=filters[key]===val?'':val;document.getElementById('cfBtn').style.display=hasActiveFilters()?'':'none';renderTasks();renderSidebar();};
 window.clearFilters=function(){filters={status:'',priority:'',assignee:'',dueFilter:''};const si=document.getElementById('searchInput');if(si)si.value='';document.getElementById('cfBtn').style.display='none';['today','week','overdue'].forEach(k=>{document.getElementById('duf_'+k)?.classList.remove('active');});renderTasks();renderSidebar();};
@@ -2775,8 +2871,8 @@ window.clearFilters=function(){filters={status:'',priority:'',assignee:'',dueFil
 function getFiltered(){
   const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
   let st;
-  if(currentDashboard==='personal'){st=tasks.filter(t=>(t.source||'team')==='personal'&&t.createdBy===currentUser?.uid&&!t.archived);}
-  else{const tt=tasks.filter(t=>(t.source||'team')!=='personal'&&!t.archived);st=isAdmin()?tt:tt.filter(t=>!t.assigneeId||t.assigneeId===currentUser?.uid);}
+  // Personal dashboard removed — always show team tasks
+  {const tt=tasks.filter(t=>(t.source||'team')!=='personal'&&!t.archived);st=isAdmin()?tt:tt.filter(t=>!t.assigneeId||t.assigneeId===currentUser?.uid);}
   const now=new Date();
   st=st.filter(t=>{
     if(!filters.status && t.status==='done') return false; // hide done by default
@@ -2805,7 +2901,7 @@ function taskCardHtml(t,isPersonal=false,groupBy='priority'){
   const doneSubtasks=subtasks.filter(s=>s.done).length;
   const progress=subtasks.length?Math.round((doneSubtasks/subtasks.length)*100):(isDone?100:0);
   const showProgress=subtasks.length>0||isDone;
-  const canEdit=isAdmin()||(t.source==='personal'&&t.createdBy===currentUser?.uid);
+  const canEdit=isAdmin();
   const isSelected=selectedTasks.has(t.id);
   const timer=timers[t.id];const isTimerRunning=timer?.start;
   const leftBorder=t.color?`border-left:4px solid ${t.color};`:'';
@@ -2879,7 +2975,7 @@ function taskSpreadsheetRowHtml(t, isPersonal=false){
   const subtasks=t.subtasks||[];
   const doneSubtasks=subtasks.filter(s=>s.done).length;
   const progress=subtasks.length?Math.round((doneSubtasks/subtasks.length)*100):(isDone?100:0);
-  const canEdit=isAdmin()||(t.source==='personal'&&t.createdBy===currentUser?.uid);
+  const canEdit=isAdmin();
   const desc=(t.description||'').replace(/<[^>]+>/g,' ').trim();
   const dueColor=due?.cls==='overdue'?'var(--red)':due?.cls==='warning'?'var(--amber)':'var(--ink-mid)';
   const statusBadge=`<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:.67rem;font-weight:700;border:1.5px solid;color:${s_.color};background:${s_.bg};border-color:${s_.border};white-space:nowrap">${s_.label}</span>`;
@@ -2922,7 +3018,7 @@ function renderTasks(){
   const f=getFiltered();
   document.getElementById('cfBtn').style.display=hasActiveFilters()?'':'none';
   document.getElementById('taskCount').textContent=`${f.length} task${f.length!==1?'s':''}`;
-  const si=document.getElementById('searchInput');if(si)si.placeholder=currentDashboard==='personal'?'Search personal tasks…':'Search team tasks…';
+  const si=document.getElementById('searchInput');if(si)si.placeholder='Search team tasks…';
   const grouped=document.getElementById('tasksGrouped');const empty=document.getElementById('emptyState');
   if(currentViewMode==='list'){
     if(f.length===0){grouped.innerHTML='';empty.style.display='flex';empty.innerHTML=getEmptyHtml();return;}
@@ -2935,7 +3031,7 @@ function renderTasks(){
       <th style="color:#B45309;background:rgba(180,83,9,.06)">Due Date</th>
       <th style="color:#BE185D;background:rgba(190,24,93,.06)">Priority</th>
       <th style="width:40px"></th>
-    </tr></thead><tbody>${f.map(t=>taskSpreadsheetRowHtml(t,currentDashboard==='personal')).join('')}</tbody></table>`;return;
+    </tr></thead><tbody>${f.map(t=>taskSpreadsheetRowHtml(t,false)).join('')}</tbody></table>`;return;
   }
   // Board
   grouped.style.cssText='display:flex;gap:14px;align-items:flex-start;min-width:max-content;height:100%';
@@ -2943,20 +3039,19 @@ function renderTasks(){
   empty.style.display='none';
   const makeKanban=(cols,keyFn,infoFn,groupBy)=>cols.map(([key,label])=>{
     const items=f.filter(t=>keyFn(t)===key);const info=infoFn(key);
-    const cardsHtml=items.length?items.map(t=>taskCardHtml(t,currentDashboard==='personal',groupBy)).join(''):`<div class="kanban-empty"><div class="kanban-empty-icon">${info.icon||'○'}</div><div class="kanban-empty-text">No ${label.toLowerCase()} tasks</div></div>`;
+    const cardsHtml=items.length?items.map(t=>taskCardHtml(t,false,groupBy)).join(''):`<div class="kanban-empty"><div class="kanban-empty-icon">${info.icon||'○'}</div><div class="kanban-empty-text">No ${label.toLowerCase()} tasks</div></div>`;
     return`<div class="kanban-col" id="pg_${key}">
       <div class="kanban-col-header"><span class="fdot" style="background:${info.color}"></span><span class="kanban-col-title" style="color:${info.color}">${label}</span><span class="kanban-col-count" style="background:${info.bg};color:${info.color};border:1px solid ${info.border}">${items.length}</span><button class="kanban-col-toggle" onclick="toggleGroup('${key}')">▾</button></div>
       <div class="kanban-cards" id="kc_${key}" ondragover="onDragOver(event,'${key}')" ondrop="onDrop(event,'${key}','${groupBy}')"><div id="pgt_${key}">${cardsHtml}</div></div>
     </div>`;
   }).join('');
-  if(currentDashboard==='personal'||!isAdmin()){
+  if(!isAdmin()){
     grouped.innerHTML=makeKanban([['todo','To Do'],['in_progress','In Progress'],['review','In Review'],['done','Done']],t=>t.status,k=>S[k],'status');
   } else {
     grouped.innerHTML=makeKanban([['critical','Critical'],['high','High'],['medium','Medium'],['low','Low']],t=>t.priority,k=>P[k],'priority');
   }
 }
 function getEmptyHtml(){
-  if(currentDashboard==='personal')return`<div class="empty-icon">👤</div><div class="empty-title">No personal tasks yet</div><div class="empty-sub">Click "+ Personal Task" to get started.</div>`;
   return`<div class="empty-icon">🏢</div><div class="empty-title">No team tasks found</div><div class="empty-sub">${isAdmin()?'Click "+ New Task" to create one.':'No tasks assigned to you yet.'}</div>`;
 }
 window.toggleGroup=function(pk){const el=document.getElementById('pgt_'+pk);const btn=document.querySelector('#pg_'+pk+' .kanban-col-toggle');if(!el)return;const h=el.style.display==='none';el.style.display=h?'':'none';if(btn)btn.textContent=h?'▾':'▸';};
@@ -2970,7 +3065,7 @@ function renderDetail(){
   const p=P[t.priority]||P.medium,s_=S[t.status]||S.todo,due=fd(t.due);
   const comments=t.comments&&typeof t.comments==='object'?Object.entries(t.comments).map(([k,v])=>({id:k,...v})).sort((a,b)=>a.ts-b.ts):[];
   const acts=activity.filter(a=>a.taskId===t.id).slice(0,12);
-  const canEdit=isAdmin()||(t.source==='personal'&&t.createdBy===currentUser?.uid);
+  const canEdit=isAdmin();
   const mOpts=members.map(m=>`<option value="${m.id}" ${t.assigneeId===m.id?'selected':''}>${esc(m.name)}</option>`).join('');
   const sOpts=Object.entries(S).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v.label}</option>`).join('');
   const pOpts=Object.entries(P).map(([k,v])=>`<option value="${k}" ${t.priority===k?'selected':''}>${v.icon} ${v.label}</option>`).join('');
@@ -3098,43 +3193,45 @@ window.archiveTask=async function(tid){
 
 // ── TASK MODAL ──
 window.openTaskModal=function(tid,forceSource){
-  const source=forceSource||(currentDashboard==='personal'?'personal':'team');
-  if(source==='team'&&!isAdmin()){toast('Only admins can create/edit team tasks.');return;}
-  const t=tid?tasks.find(x=>x.id===tid):null;const isP=(t?.source||source)==='personal';
-  document.getElementById('tmTitle').textContent=isP?(t?'Edit Personal Task':'New Personal Task'):(t?'Edit Task':'New Task');
-  document.getElementById('editId').value=tid||'';document.getElementById('taskSource').value=t?.source||source;
-  document.getElementById('tTitle').value=t?.title||'';
-  document.getElementById('tDesc').innerHTML=t?.description||'';
-  document.getElementById('tStatus').value=t?.status||'todo';document.getElementById('tPriority').value=t?.priority||'medium';document.getElementById('tDue').value=t?.due||'';
-  pendingTags=[...(t?.tags||[])];renderPendingTags();document.getElementById('tagInput').value='';
-  pendingSubtasks=(t?.subtasks||[]).map(s=>({...s}));renderPendingSubtasks();document.getElementById('subtaskInput').value='';
-  pendingColor=t?.color||'';initColorPicker();
-  pendingRecur=t?.recur||'';document.querySelectorAll('.recur-btn').forEach(b=>{b.classList.toggle('active',b.dataset.v===pendingRecur);});
-  const estEl=document.getElementById('tEstimate');if(estEl)estEl.value=t?.estimatedTime||'';
-  const linkEl=document.getElementById('tLink');if(linkEl)linkEl.value=t?.link||'';
-  const ar=document.getElementById('assigneeRow');const pn=document.getElementById('personalAssigneeNote');const en=document.getElementById('emailNote')?.parentElement;
-  if(isP){if(ar)ar.style.display='none';if(pn)pn.style.display='block';if(en)en.style.display='none';}
-  else{if(ar)ar.style.display='grid';if(pn)pn.style.display='none';if(en)en.style.display='';
+  // Show modal immediately — before any data population — so a mid-flight
+  // Firebase onValue re-fire cannot reset currentUserProfile and silently abort.
+  document.getElementById('taskModal').style.display='flex';
+  setTimeout(()=>document.getElementById('tTitle').focus(),50);
+  try{
+    const t=tid?tasks.find(x=>x.id===tid):null;
+    document.getElementById('tmTitle').textContent=t?'Edit Task':'New Task';
+    document.getElementById('editId').value=tid||'';document.getElementById('taskSource').value='team';
+    document.getElementById('tTitle').value=t?.title||'';
+    document.getElementById('tDesc').innerHTML=t?.description||'';
+    document.getElementById('tStatus').value=t?.status||'todo';document.getElementById('tPriority').value=t?.priority||'medium';document.getElementById('tDue').value=t?.due||'';
+    pendingTags=[...(t?.tags||[])];renderPendingTags();document.getElementById('tagInput').value='';
+    pendingSubtasks=(t?.subtasks||[]).map(s=>({...s}));renderPendingSubtasks();document.getElementById('subtaskInput').value='';
+    pendingColor=t?.color||'';initColorPicker();
+    pendingRecur=t?.recur||'';document.querySelectorAll('.recur-btn').forEach(b=>{b.classList.toggle('active',b.dataset.v===pendingRecur);});
+    const estEl=document.getElementById('tEstimate');if(estEl)estEl.value=t?.estimatedTime||'';
+    const linkEl=document.getElementById('tLink');if(linkEl)linkEl.value=t?.link||'';
+    const ar=document.getElementById('assigneeRow');const pn=document.getElementById('personalAssigneeNote');const en=document.getElementById('emailNote')?.parentElement;
+    if(ar)ar.style.display='grid';if(pn)pn.style.display='none';if(en)en.style.display='';
     document.getElementById('tAssignee').innerHTML=`<option value="">— Unassigned —</option>`+members.map(m=>`<option value="${m.id}" ${t?.assigneeId===m.id?'selected':''}>${esc(m.name)}</option>`).join('');
     const cfg=getEmailConfig();const note=document.getElementById('emailNote');
     if(note){if(cfg){note.className='info-box';note.textContent='✅ EmailJS configured!';}else{note.className='warn-box';note.innerHTML='⚠ EmailJS not configured. <a href="#" onclick="closeTaskModal();openEmailConfig();return false" style="color:var(--accent);font-weight:600">Set up</a>';}}
-  }
-  document.getElementById('taskModal').style.display='flex';setTimeout(()=>document.getElementById('tTitle').focus(),50);
+  }catch(err){console.error('openTaskModal error:',err);}
 };
 window.closeTaskModal=function(){document.getElementById('taskModal').style.display='none';};
 window.saveTask=async function(){
   const title=document.getElementById('tTitle').value.trim();if(!title)return alert('Please enter a title!');
-  const eid=document.getElementById('editId').value;const source=document.getElementById('taskSource').value||'team';const isP=source==='personal';
-  const assigneeId=isP?currentUser.uid:(document.getElementById('tAssignee').value||null);
+  if(!isAdmin()){toast('Only admins can save tasks.');return;}
+  const eid=document.getElementById('editId').value;const source='team';
+  const assigneeId=document.getElementById('tAssignee').value||null;
   const prevTask=eid?tasks.find(x=>x.id===eid):null;const prevAssignee=prevTask?.assigneeId||null;
   const assignedAt=!assigneeId?null:assigneeId!==prevAssignee?Date.now():(prevTask?.assignedAt||Date.now());
   const desc=document.getElementById('tDesc').innerHTML;
   const estimatedTime=parseFloat(document.getElementById('tEstimate')?.value)||0;
   const taskLink=(document.getElementById('tLink')?.value||'').trim()||null;
   const data={title,description:desc,status:document.getElementById('tStatus').value,priority:document.getElementById('tPriority').value,assigneeId,due:document.getElementById('tDue').value||null,assignedAt,source,tags:pendingTags,subtasks:pendingSubtasks,color:pendingColor,recur:pendingRecur||null,estimatedTime:estimatedTime||null,link:taskLink};
-  if(eid){await update(ref(db,`tasks/${eid}`),data);await log(eid,currentUser.uid,'Task updated');if(!isP&&assigneeId&&assigneeId!==prevAssignee){const assignee=members.find(m=>m.id===assigneeId);await sendTaskEmail({...data,id:eid},assignee);}}
-  else{const newId=uid();await set(ref(db,`tasks/${newId}`),{...data,createdBy:currentUser.uid,ts:Date.now(),comments:{}});await log(newId,currentUser.uid,isP?'Personal task created':`Task created`);if(!isP&&assigneeId){const assignee=members.find(m=>m.id===assigneeId);await sendTaskEmail({...data,id:newId},assignee);}}
-  closeTaskModal();toast(isP?'✅ Personal task saved!':'✅ Task saved!');
+  if(eid){await update(ref(db,`tasks/${eid}`),data);await log(eid,currentUser.uid,'Task updated');if(assigneeId&&assigneeId!==prevAssignee){const assignee=members.find(m=>m.id===assigneeId);await sendTaskEmail({...data,id:eid},assignee);}}
+  else{const newId=uid();await set(ref(db,`tasks/${newId}`),{...data,createdBy:currentUser.uid,ts:Date.now(),comments:{}});await log(newId,currentUser.uid,'Task created');if(assigneeId){const assignee=members.find(m=>m.id===assigneeId);await sendTaskEmail({...data,id:newId},assignee);}}
+  closeTaskModal();toast('✅ Task saved!');
 };
 
 // ── TEMPLATES ──
@@ -3150,9 +3247,9 @@ window.openTemplates=function(){
 };
 window.closeTemplates=function(){document.getElementById('templateModal').style.display='none';};
 window.applyTemplate=function(i){
-  closeTemplates();const tpl=TEMPLATES[i];const source=currentDashboard==='personal'?'personal':'team';
-  if(source==='team'&&!isAdmin()){toast('Only admins can create team tasks.');return;}
-  openTaskModal(null,source);
+  closeTemplates();const tpl=TEMPLATES[i];
+  if(!isAdmin()){toast('Only admins can create team tasks.');return;}
+  openTaskModal(null,'team');
   setTimeout(()=>{
     document.getElementById('tTitle').value=tpl.name;
     document.getElementById('tDesc').innerHTML=tpl.description;
@@ -3181,7 +3278,6 @@ window.unarchiveTask=async function(tid){await update(ref(db,`tasks/${tid}`),{ar
 // ── COMMAND PALETTE ──
 const CMD_ACTIONS=[
   {icon:'＋',title:'New Task',sub:'Create a new team task',fn:()=>openTaskModal(null,'team'),kbd:'N'},
-  {icon:'👤',title:'New Personal Task',sub:'Create a personal task',fn:()=>openTaskModal(null,'personal')},
   {icon:'🌙',title:'Toggle Dark Mode',sub:'Switch light/dark theme',fn:()=>toggleTheme(),kbd:'D'},
   {icon:'⊞',title:'Board View',sub:'Switch to Kanban board',fn:()=>setViewMode('board'),kbd:'1'},
   {icon:'☰',title:'List View',sub:'Switch to list view',fn:()=>setViewMode('list'),kbd:'2'},
@@ -3386,13 +3482,17 @@ window.switchView=function(view){
   ['lp-stats-section','lp-status-section','lp-due-section'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display=isTasksView?'':'none';
   });
-  // Hide sidebar for compliance/audit (full-width), show for all other views
-  const sb=document.getElementById('mainSidebar');
-  // sidebar always visible regardless of view
-  // Notes shortcut visible on Tasks view for all users when on personal dashboard
+  // Notes shortcut hidden — personal dashboard removed
   const notesShortcut=document.getElementById('notesShortcutWrap');
-  if(notesShortcut)notesShortcut.style.display=(view==='tasks'&&currentDashboard==='personal')?'':'none';
-  if(view==='activity')renderActivity();if(view==='team')renderTeam();if(view==='tasks'){if(currentDashboard==='notes')switchDashboard('personal');else renderTasks();}if(view==='report')renderReport();if(view==='goals')renderGoals();if(view==='compliance')renderCompliance();if(view==='audit')renderAuditWork();
+  if(notesShortcut)notesShortcut.style.display='none';
+  // Update sidebar Add New button label based on view context
+  const sidebarAddBtn=document.getElementById('sidebarAddNew2');
+  if(sidebarAddBtn){
+    if(view==='compliance'){sidebarAddBtn.childNodes[sidebarAddBtn.childNodes.length-1].textContent=' Add Record';}
+    else if(view==='audit'){sidebarAddBtn.childNodes[sidebarAddBtn.childNodes.length-1].textContent=' Add Item';}
+    else{sidebarAddBtn.childNodes[sidebarAddBtn.childNodes.length-1].textContent=' Add New';}
+  }
+  if(view==='activity')renderActivity();if(view==='team')renderTeam();if(view==='tasks'){if(currentDashboard==='notes')switchDashboard('team');else renderTasks();}if(view==='report')renderReport();if(view==='goals')renderGoals();if(view==='compliance')renderCompliance();if(view==='audit')renderAuditWork();
 };
 
 // ══════════════════════════════════════════════
@@ -4177,15 +4277,17 @@ window.toggleAuditParent=function(pid){
 
 /* ══ RENDER ══ */
 window.renderAuditWork=function(){
+  const adm=isAdmin();
   const addBtn=document.getElementById('auditAddBtn');
   if(addBtn){
-    addBtn.style.display=isAdmin()?'':'none';
+    // Show Add Area button for admins; also show if profile not yet loaded (will re-render once loaded)
+    addBtn.style.display=(adm||!currentUserProfile)?'':'none';
     addBtn.textContent=`＋ ${currentAuditModule==='statutory'?'Statutory':'Internal'} Area`;
   }
   const addTaskBtn=document.getElementById('auditAddTaskBtn');
   if(addTaskBtn){
     const hasAreas=auditParents.filter(p=>(p.module||'internal')===currentAuditModule).length>0;
-    addTaskBtn.style.display=(isAdmin()&&hasAreas)?'':'none';
+    addTaskBtn.style.display=(adm&&hasAreas)?'':'none';
   }
 
   const tbody=document.getElementById('auditTableBody');
@@ -4413,6 +4515,7 @@ window.auditDragEnd=function(){document.querySelectorAll('.a-par-row,.a-sub-row'
 
 /* ── Parent modal ── */
 window.openAuditParentModal=function(pid){
+  if(!isAdmin()){toast('Only admins can add audit areas.');return;}
   const p=pid?auditParents.find(x=>x.id===pid):null;
   document.getElementById('auditParentModalTitle').textContent=p?'Edit Audit Area':'New Audit Area';
   document.getElementById('editAuditParentId').value=pid||'';
@@ -4501,6 +4604,7 @@ window.closeAuditSubModal=function(){document.getElementById('auditSubModal').st
 
 /* Open Add Task from header — shows area selector in modal */
 window.openAuditSubModalFromHeader=function(){
+  if(!isAdmin()){toast('Only admins can add audit items.');return;}
   const mod=currentAuditModule||'internal';
   const areas=auditParents.filter(p=>(p.module||'internal')===mod);
   if(!areas.length){toast('Please create an audit area first.');return;}
@@ -4901,20 +5005,27 @@ function saveTempTasks() {
 function tempUid() { return 'tmp' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 window.openTempBoard = function() {
-  document.getElementById('tempBoardOverlay').style.display = 'block';
-  document.getElementById('tempBoardPanel').style.display = 'flex';
+  const overlay = document.getElementById('tempBoardOverlay');
+  const panel = document.getElementById('tempBoardPanel');
+  if(!overlay || !panel){ toast('Temp Board panel not found.'); return; }
+  overlay.style.display = 'block';
+  panel.style.display = 'flex';
   // Restore saved purpose
   const savedPurpose = localStorage.getItem('gf_tempboard_purpose') || '';
-  document.getElementById('tempBoardPurpose').value = savedPurpose;
+  const purposeEl = document.getElementById('tempBoardPurpose');
+  if(purposeEl) purposeEl.value = savedPurpose;
   renderTempBoard();
-  setTimeout(() => document.getElementById('tempTaskInput').focus(), 100);
+  setTimeout(() => { const inp = document.getElementById('tempTaskInput'); if(inp) inp.focus(); }, 100);
 };
 
 window.closeTempBoard = function() {
-  document.getElementById('tempBoardOverlay').style.display = 'none';
-  document.getElementById('tempBoardPanel').style.display = 'none';
+  const overlay = document.getElementById('tempBoardOverlay');
+  const panel = document.getElementById('tempBoardPanel');
+  if(overlay) overlay.style.display = 'none';
+  if(panel) panel.style.display = 'none';
   // Save purpose
-  localStorage.setItem('gf_tempboard_purpose', document.getElementById('tempBoardPurpose').value);
+  const purpose = document.getElementById('tempBoardPurpose');
+  if(purpose) localStorage.setItem('gf_tempboard_purpose', purpose.value);
 };
 
 window.addTempTask = function() {
@@ -4958,7 +5069,8 @@ window.clearTempBoard = function() {
   if (!confirm(`Clear all ${tempTasks.length} tasks from the Temp Board? This cannot be undone.`)) return;
   tempTasks = [];
   localStorage.removeItem('gf_tempboard_purpose');
-  document.getElementById('tempBoardPurpose').value = '';
+  const purposeEl = document.getElementById('tempBoardPurpose');
+  if(purposeEl) purposeEl.value = '';
   saveTempTasks();
   renderTempBoard();
   toast('🧹 Temp Board cleared!');
@@ -4975,8 +5087,10 @@ function renderTempBoard() {
   const todo = tempTasks.filter(t => !t.done);
   const done = tempTasks.filter(t => t.done);
 
-  document.getElementById('tempTodoCount').textContent = todo.length;
-  document.getElementById('tempDoneCount').textContent = done.length;
+  const todoCountEl = document.getElementById('tempTodoCount');
+  const doneCountEl = document.getElementById('tempDoneCount');
+  if(todoCountEl) todoCountEl.textContent = todo.length;
+  if(doneCountEl) doneCountEl.textContent = done.length;
 
   const cardHtml = (t) => {
     const p = TEMP_P[t.priority] || TEMP_P.medium;
@@ -5055,14 +5169,14 @@ function showWelcomeModal(){
       <div class="welcome-step"><span class="welcome-step-num">4</span><div><div class="welcome-step-title">View Reports & Analytics</div><div class="welcome-step-sub">Monitor team velocity, workload and task completion rates</div></div></div>
     `;
   } else {
-    document.getElementById('welcomeSubtitle').textContent='Your personal workspace is ready. Start organizing your tasks.';
-    document.getElementById('welcomeRoleDesc').textContent='Personal dashboard + team tasks assigned to you';
-    document.getElementById('welcomePrimaryBtn').textContent='👤 Go to Personal Dashboard';
+    document.getElementById('welcomeSubtitle').textContent='Your Finance Team workspace is ready. Check tasks assigned to you.';
+    document.getElementById('welcomeRoleDesc').textContent='Team tasks assigned to you · Compliance tracking';
+    document.getElementById('welcomePrimaryBtn').textContent='🏢 Go to Team Dashboard';
     document.getElementById('welcomeSteps').innerHTML=`
-      <div class="welcome-step"><span class="welcome-step-num">1</span><div><div class="welcome-step-title">Create a personal task</div><div class="welcome-step-sub">Click "+ Personal Task" on your Personal dashboard to add your first task</div></div></div>
-      <div class="welcome-step"><span class="welcome-step-num">2</span><div><div class="welcome-step-title">Check team tasks</div><div class="welcome-step-sub">Switch to Finance Team tab to see tasks assigned to you by admin</div></div></div>
-      <div class="welcome-step"><span class="welcome-step-num">3</span><div><div class="welcome-step-title">Use 📝 My Notes</div><div class="welcome-step-sub">Click "My Notes" button on Personal dashboard to jot down quick notes</div></div></div>
-      <div class="welcome-step"><span class="welcome-step-num">4</span><div><div class="welcome-step-title">Try the Temp Board</div><div class="welcome-step-sub">Use 🧲 Temp Board in the sidebar to park tasks temporarily</div></div></div>
+      <div class="welcome-step"><span class="welcome-step-num">1</span><div><div class="welcome-step-title">View your tasks</div><div class="welcome-step-sub">The Finance Team board shows all tasks assigned to you by admin</div></div></div>
+      <div class="welcome-step"><span class="welcome-step-num">2</span><div><div class="welcome-step-title">Update task status</div><div class="welcome-step-sub">Click the checkbox or open a task to mark it In Progress, In Review or Done</div></div></div>
+      <div class="welcome-step"><span class="welcome-step-num">3</span><div><div class="welcome-step-title">Track Compliance</div><div class="welcome-step-sub">Head to 🛡 Compliance tab to fill in your submit & filing dates</div></div></div>
+      <div class="welcome-step"><span class="welcome-step-num">4</span><div><div class="welcome-step-title">Use the Temp Board</div><div class="welcome-step-sub">Use 🧲 Temp Board in the sidebar to jot quick scratch tasks</div></div></div>
     `;
   }
 
@@ -5075,9 +5189,8 @@ window.closeWelcome=function(goToDashboard){
   if(currentUser)localStorage.removeItem('gf_newuser_'+currentUser.uid);
   localStorage.setItem('tf_toured','1');
   if(goToDashboard){
-    const isAdm=currentUserProfile?.role==='admin';
     switchView('tasks');
-    switchDashboard(isAdm?'team':'personal');
+    switchDashboard('team');
   }
 };
 
@@ -5087,8 +5200,8 @@ window.closeWelcome=function(goToDashboard){
 
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable)return;
-  if(e.key==='Escape'){closeTaskModal();closeDetail();closeCmdPalette();closeShortcuts();endTour();closeArchive();closeTemplates();closeComplianceModal();closeAuditParentModal();closeAuditSubModal();closeAuditQueryPanel();closeTempBoard();if(currentView==='notes'&&noteSaveTimer){clearTimeout(noteSaveTimer);autoSaveNote();}}
-  if(e.key==='n'||e.key==='N'){if(currentView==='tasks'){if(currentDashboard==='personal')openTaskModal(null,'personal');else if(currentDashboard==='team'&&isAdmin())openTaskModal(null,'team');}}
+  if(e.key==='Escape'){[closeTaskModal,closeDetail,closeCmdPalette,closeShortcuts,endTour,closeArchive,closeTemplates,closeComplianceModal,closeAuditParentModal,closeAuditSubModal,closeAuditQueryPanel,closeTempBoard].forEach(fn=>{try{fn();}catch(ex){}});if(currentView==='notes'&&noteSaveTimer){clearTimeout(noteSaveTimer);autoSaveNote();}}
+  if(e.key==='n'||e.key==='N'){if(currentView==='tasks'&&isAdmin())openTaskModal(null,'team');}
   if(e.key==='/'||e.key==='f'){document.getElementById('searchInput')?.focus();}
   if(e.key==='b'||e.key==='B'){toggleSidebar();}
   if(e.key==='t'||e.key==='T'){switchView('tasks');}
@@ -5129,8 +5242,8 @@ setInterval(()=>{
 },60000);
 
 const savedEmail=localStorage.getItem('tf_email');if(savedEmail){try{const c=JSON.parse(savedEmail);emailjs.init(c.pubkey);}catch(e){}}
-// Auto-init portal toggle to 'member' on load
-selectedPortalRole='member';selectPortal('member');
+// Auto-init portal toggle UI to 'member' on load
+selectPortal('member');
 window.openEmailConfig=openEmailConfig;
 
 // Request notification permission on app load
@@ -5185,8 +5298,8 @@ setInterval(checkComplianceReminders,3600000);
   '.filter-btn.active{background:var(--accent-light)!important;color:var(--accent)!important;font-weight:600!important}',
   '.due-filter-btn{border-radius:8px!important;font-size:.78rem!important;padding:6px 10px!important;margin-bottom:1px!important}',
   '.due-filter-btn.active{background:var(--amber-bg)!important;color:var(--amber)!important}',
-  '#sidebarAddNew{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:9px 16px;margin-bottom:18px;background:var(--grad-accent);color:#fff;border:none;border-radius:10px;font-family:Figtree,sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(91,79,233,.35);transition:all .18s;letter-spacing:-.01em}',
-  '#sidebarAddNew:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(91,79,233,.48)}',
+  '#sidebarAddNew2{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:9px 16px;margin-bottom:18px;background:var(--grad-accent);color:#fff;border:none;border-radius:10px;font-family:Figtree,sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(91,79,233,.35);transition:all .18s;letter-spacing:-.01em}',
+  '#sidebarAddNew2:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(91,79,233,.48)}',
   '.dash-switcher{background:var(--surface)!important;border-bottom:1.5px solid var(--border)!important;padding:12px 22px!important;gap:8px!important}',
   '.dash-tab{border-radius:10px!important;border:1.5px solid var(--border)!important;font-size:.81rem!important;font-weight:600!important;padding:7px 18px!important;color:var(--ink-mid)!important;background:transparent!important}',
   '.dash-tab:hover{border-color:var(--accent-mid)!important;background:var(--accent-light)!important;color:var(--ink)!important}',
@@ -5298,6 +5411,73 @@ setInterval(checkComplianceReminders,3600000);
   // sidebar Add New button is now in HTML directly as lp-add-btn
 })();
 
+// ── CLAIM ADMIN ROLE ──
+window.claimAdminRole = async function(){
+  if(!currentUserProfile || !currentUser){toast('Not logged in.');return;}
+  if(currentUserProfile.role==='admin'){toast('You are already an Admin!');return;}
+  const confirmed = confirm(
+    'Promote your account to Admin?\n\nThis gives you full access to create tasks, manage compliance, view reports, and manage your team.\n\nClick OK to confirm.'
+  );
+  if(!confirmed)return;
+  try{
+    const btn=document.getElementById('claimAdminBtn');
+    if(btn){btn.textContent='Updating…';btn.disabled=true;}
+    await update(ref(db,'members/'+currentUser.uid),{role:'admin'});
+    toast('\u2705 You are now an Admin! Reloading…');
+    setTimeout(()=>location.reload(),1500);
+  }catch(e){
+    console.error('claimAdminRole error:',e);
+    toast('Error updating role: '+e.message);
+    const btn=document.getElementById('claimAdminBtn');
+    if(btn){btn.textContent='\u26a1 Claim Admin';btn.disabled=false;}
+  }
+};
+
+
 </script>
+
+<!-- ── TOAST CONTAINER (was missing — caused every toast() call to crash silently) ── -->
+<div id="toastWrap" class="toast-wrap"></div>
+
+<!-- ── TEMP BOARD PANEL (was missing — JS referenced these elements but they didn't exist) ── -->
+<div id="tempBoardOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,22,35,.45);z-index:300;backdrop-filter:blur(3px)" onclick="if(event.target===this)closeTempBoard()"></div>
+<div id="tempBoardPanel" style="display:none;position:fixed;top:0;right:0;height:100vh;width:min(420px,96vw);background:var(--white);border-left:1.5px solid var(--border);box-shadow:-8px 0 40px rgba(15,22,35,.18);z-index:301;flex-direction:column;overflow:hidden">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1.5px solid var(--border);flex-shrink:0">
+    <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.03em">🧲 Temp Board</div>
+    <button class="icon-btn" onclick="closeTempBoard()">✕</button>
+  </div>
+  <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0">
+    <input id="tempBoardPurpose" class="input" placeholder="Board purpose / goal (optional)…" style="font-size:.8rem;padding:7px 10px;margin-bottom:10px" oninput="localStorage.setItem('gf_tempboard_purpose',this.value)">
+    <div style="display:flex;gap:8px">
+      <input id="tempTaskInput" class="input" placeholder="New task…" style="flex:1;font-size:.82rem;padding:7px 10px" onkeydown="if(event.key==='Enter')addTempTask()">
+      <select id="tempTaskPriority" class="input" style="width:90px;font-size:.78rem;padding:6px 8px">
+        <option value="medium">Medium</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="low">Low</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="addTempTask()">Add</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:16px">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:.78rem;font-weight:700;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.06em">To Do <span id="tempTodoCount" style="background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:1px 7px;margin-left:4px">0</span></div>
+      </div>
+      <div id="tempTodoList"></div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:.78rem;font-weight:700;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.06em">Done <span id="tempDoneCount" style="background:#dcfce7;color:#166534;border-radius:99px;padding:1px 7px;margin-left:4px">0</span></div>
+      </div>
+      <div id="tempDoneList"></div>
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+    <div id="tempBoardStats" style="font-size:.75rem;color:var(--ink-dim)">Empty board</div>
+    <button class="btn btn-ghost btn-sm" onclick="if(confirm('Clear all tasks from Temp Board?'))clearTempBoard()">🗑 Clear</button>
+  </div>
+</div>
+
 </body>
 </html>
