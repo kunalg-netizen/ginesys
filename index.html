@@ -1156,7 +1156,7 @@ select option{background:var(--white);color:var(--ink)}
         <div class="team-page">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:10px">
             <div><div class="pg-title">Team Members</div><div class="pg-sub">Registered users in your workspace</div></div>
-            <button class="btn btn-primary btn-sm" onclick="generateInviteLink()" style="width:auto">🔗 Generate Invite Link</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" id="syncMembersBtn" onclick="syncMissingMembers()" style="width:auto" title="Fix members who logged in but are missing from the database">🔄 Sync Missing Members</button><button class="btn btn-primary btn-sm" onclick="generateInviteLink()" style="width:auto">🔗 Generate Invite Link</button></div>
           </div>
           <div id="inviteLinkBox" style="display:none;background:var(--accent-light);border:1.5px solid var(--accent-mid);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;flex-direction:column;gap:8px">
             <div style="font-size:.78rem;font-weight:600;color:var(--accent)">📨 Share this link with new members to let them register:</div>
@@ -1768,7 +1768,7 @@ select option{background:var(--white);color:var(--ink)}
         <select class="input" id="tAssignee">
           <option value="">— Unassigned —</option>
         </select>
-        <div class="info-box" id="emailNote" style="margin-top:6px">✅ EmailJS configured!</div>
+        <div class="info-box" id="emailNote" style="margin-top:6px">✅ Email configured!</div>
       </div>
       <!-- Personal task note (hidden for team tasks) -->
       <div id="personalAssigneeNote" style="display:none;background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);padding:9px 12px;font-size:.78rem;color:var(--accent)">👤 This task will be assigned to you personally.</div>
@@ -1862,60 +1862,73 @@ select option{background:var(--white);color:var(--ink)}
 
 <!-- EMAIL MODAL -->
 <div class="overlay" id="emailModal" style="display:none" onclick="if(event.target===this)closeEmailModal()">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:600px">
     <div class="modal-header">
-      <div class="modal-title">📧 Email Notification Setup</div>
+      <div class="modal-title">📧 Email Notification Setup — Google Apps Script (Free)</div>
       <button class="icon-btn" onclick="closeEmailModal()">✕</button>
     </div>
     <div class="form-body">
 
-      <!-- Step 1: Keys -->
-      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin-bottom:8px">Step 1 — EmailJS Credentials</div>
+      <!-- Step 1: Deploy Google Apps Script -->
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin-bottom:8px">Step 1 — Create Google Apps Script</div>
       <div class="info-box" style="margin-bottom:12px">
-        1. Visit <strong>emailjs.com</strong> → Sign up free<br>
-        2. Add an Email Service → copy <strong>Service ID</strong><br>
-        3. Create a Template → copy <strong>Template ID</strong><br>
-        4. Account → API Keys → copy <strong>Public Key</strong>
-      </div>
-      <div class="fg"><label>Public Key</label><input class="input" id="ej_pubkey" placeholder="user_xxxxxxxxxx"></div>
-      <div class="form-row">
-        <div class="fg"><label>Service ID</label><input class="input" id="ej_service" placeholder="service_xxxxxxx"></div>
-        <div class="fg"><label>Template ID</label><input class="input" id="ej_template" placeholder="template_xxxxxxx"></div>
+        1. Go to <strong><a href="https://script.google.com" target="_blank" style="color:var(--accent)">script.google.com</a></strong> → New Project<br>
+        2. Delete any code and paste the script below → Save<br>
+        3. Click <strong>Deploy → New Deployment</strong><br>
+        4. Type = <strong>Web app</strong> → Execute as <strong>Me</strong> → Access = <strong>Anyone</strong><br>
+        5. Click <strong>Deploy</strong> → Authorize → Copy the <strong>Web App URL</strong>
       </div>
 
-      <!-- Step 2: Template variables -->
-      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin:16px 0 8px">Step 2 — Template Variables</div>
-      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:.77rem;margin-bottom:12px">
-        <div style="margin-bottom:6px;color:var(--ink-mid)">Copy these variable names exactly into your EmailJS template:</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px">
-          ${[
-            ['{{to_name}}','Recipient\'s name'],
-            ['{{to_email}}','Recipient\'s email address'],
-            ['{{task_title}}','Task or compliance name'],
-            ['{{task_due}}','Due date'],
-            ['{{task_status}}','Current status'],
-            ['{{task_priority}}','Priority / type'],
-            ['{{assigned_by}}','Who assigned it'],
-            ['{{context}}','Reason for the email'],
-          ].map(([v,d])=>`<div style="display:contents">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--accent);background:var(--accent-light);padding:1px 6px;border-radius:4px;border:1px solid var(--accent-mid);white-space:nowrap">${v}</span>
-            <span style="color:var(--ink-mid);font-size:.72rem;align-self:center">${d}</span>
-          </div>`).join('')}
-        </div>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:.71rem;color:var(--ink-dim)">
-          💡 In your EmailJS template, set <strong>To Email</strong> field to <code style="font-family:'JetBrains Mono',monospace;background:var(--bg);padding:1px 5px;border-radius:3px">{{to_email}}</code> and use the other variables in the subject/body.
-        </div>
+      <!-- Script to copy -->
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin:4px 0 6px">Google Apps Script Code (copy this)</div>
+      <div style="position:relative">
+        <pre id="gasScriptCode" style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:.72rem;overflow-x:auto;white-space:pre;max-height:200px;overflow-y:auto;color:var(--ink);line-height:1.6">function doPost(e) {
+  try {
+    var d = JSON.parse(e.postData.contents);
+    var subject = '📋 ' + (d.task_title || 'Task Notification');
+    var body = 'Hi ' + (d.to_name || 'Team') + ',\n\n'
+      + (d.context || 'You have a task update.') + '\n\n'
+      + '📌 Task: ' + (d.task_title || '-') + '\n'
+      + '⚡ Priority: ' + (d.task_priority || '-') + '\n'
+      + '📊 Status: ' + (d.task_status || '-') + '\n'
+      + '📅 Due: ' + (d.task_due || 'Not set') + '\n'
+      + '👤 Assigned by: ' + (d.assigned_by || '-') + '\n\n'
+      + '— Ginesysone Finance Task Board';
+    if (d.to_email) {
+      MailApp.sendEmail({
+        to: d.to_email,
+        subject: subject,
+        body: body
+      });
+    }
+    return ContentService.createTextOutput(
+      JSON.stringify({success: true})
+    ).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({success: false, error: err.message})
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('gasScriptCode').textContent);toast('✅ Script copied!')" class="btn btn-ghost btn-xs" style="position:absolute;top:6px;right:6px">📋 Copy</button>
       </div>
+
+      <!-- Step 2: Paste URL -->
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin:16px 0 8px">Step 2 — Paste Web App URL</div>
+      <div class="fg"><label>Google Apps Script Web App URL</label><input class="input" id="gas_url" placeholder="https://script.google.com/macros/s/AKfycb.../exec"></div>
 
       <!-- Step 3: Also notify admin -->
-      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin-bottom:8px">Step 3 — Admin Copy (optional)</div>
-      <div class="form-row" style="align-items:flex-end;gap:10px;margin-bottom:4px">
-        <div class="fg" style="flex:1;margin:0">
-          <label>Also send a copy to</label>
-          <input class="input" id="ej_cc_email" type="email" placeholder="admin@company.com (optional)">
-        </div>
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin:12px 0 8px">Step 3 — Admin Copy (optional)</div>
+      <div class="fg">
+        <label>Also send a copy to</label>
+        <input class="input" id="ej_cc_email" type="email" placeholder="admin@company.com (optional)">
       </div>
       <div style="font-size:.71rem;color:var(--ink-dim);margin-bottom:14px">If set, every notification email will also be CC'd to this address.</div>
+
+      <!-- Benefits callout -->
+      <div style="background:var(--green-bg);border:1.5px solid var(--green-border);border-radius:var(--radius-sm);padding:10px 14px;font-size:.77rem;color:var(--green);margin-bottom:14px">
+        ✅ <strong>100% Free</strong> — No limits, no sign-ups, sends directly from your Gmail!
+      </div>
 
       <!-- Test + Save -->
       <div class="form-actions" style="justify-content:space-between">
@@ -1972,7 +1985,7 @@ select option{background:var(--white);color:var(--ink)}
 .goals-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<!-- Email via Google Apps Script (free, unlimited, sends from your Gmail) -->
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -2251,7 +2264,7 @@ window.bulkComplete=async function(){for(const id of selectedTasks){await update
 window.bulkReopen=async function(){for(const id of selectedTasks){await update(ref(db,`tasks/${id}`),{status:'todo',finishedAt:null});}toast(`↩ ${selectedTasks.size} tasks reopened`);clearSelection();};
 window.bulkDelete=async function(){if(!confirm(`Delete ${selectedTasks.size} tasks?`))return;const ids=[...selectedTasks];for(const id of ids){await remove(ref(db,`tasks/${id}`));}toast(`🗑 ${ids.length} tasks deleted`);clearSelection();};
 window.bulkArchive=async function(){const ids=[...selectedTasks];for(const id of ids){await update(ref(db,`tasks/${id}`),{archived:true});}toast(`📦 ${ids.length} tasks archived`,4000,async()=>{for(const id of ids){await update(ref(db,`tasks/${id}`),{archived:false});}});clearSelection();};
-window.showBulkAssign=function(){const m=prompt('Assign to member ID (type member name):');if(m){const found=members.find(x=>x.name.toLowerCase().includes(m.toLowerCase()));if(found){selectedTasks.forEach(async id=>{await update(ref(db,`tasks/${id}`),{assigneeId:found.id,assignedAt:Date.now()});});toast(`👤 Assigned to ${found.name}`);clearSelection();}}};
+window.showBulkAssign=function(){const m=prompt('Assign to member ID (type member name):');if(m){const found=members.find(x=>x.name.toLowerCase().includes(m.toLowerCase()));if(found){selectedTasks.forEach(async id=>{await update(ref(db,`tasks/${id}`),{assigneeId:found.id,assigneeName:found.name,assignedAt:Date.now()});});toast(`👤 Assigned to ${found.name}`);clearSelection();}}};
 
 // ── DRAG & DROP ──
 window.onDragStart=function(e,id){dragSrcId=id;e.dataTransfer.effectAllowed='move';setTimeout(()=>document.getElementById('tc_'+id)?.classList.add('dragging'),0);};
@@ -2361,6 +2374,22 @@ window.doLogin=async function(){
     // Role enforcement: check Firebase profile role vs selected portal
     const snap=await new Promise(res=>onValue(ref(db,`members/${cred.user.uid}`),res,{onlyOnce:true}));
     const profile=snap.val();
+
+    // ── AUTO-CREATE member record if missing from DB (first-time login fix) ──
+    if(!profile){
+      const autoName=cred.user.displayName||email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase())||'User';
+      const autoColor=['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#3b82f6','#10b981'][Math.floor(Math.random()*7)];
+      const role=selectedPortalRole||'member';
+      try{
+        await set(ref(db,`members/${cred.user.uid}`),{name:autoName,email,role,color:autoColor,createdAt:Date.now()});
+        // Profile created — auth state change will load the app normally
+      }catch(writeErr){
+        console.warn('Could not write member profile:',writeErr.message);
+        // Still allow login — subscribeAll fallback will handle it
+      }
+      return; // onAuthStateChanged will fire and load the app
+    }
+
     const actualRole=profile?.role||'member';
     if(actualRole!==selectedPortalRole){
       await signOut(auth);
@@ -2713,37 +2742,42 @@ function updateDashboardCounts(){
 const isAdmin=()=>currentUserProfile?.role==='admin';
 
 // ── EMAIL ──
-function getEmailConfig(){const s=localStorage.getItem('tf_email');return s?JSON.parse(s):null;}
+function getEmailConfig(){const s=localStorage.getItem('tf_email');if(!s)return null;const cfg=JSON.parse(s);if(cfg.gasUrl)return cfg;if(cfg.pubkey){return null;}return cfg;}
 window.openEmailConfig=function(){
   const cfg=getEmailConfig();
   if(cfg){
-    document.getElementById('ej_pubkey').value=cfg.pubkey||'';
-    document.getElementById('ej_service').value=cfg.service||'';
-    document.getElementById('ej_template').value=cfg.template||'';
+    document.getElementById('gas_url').value=cfg.gasUrl||'';
     document.getElementById('ej_cc_email').value=cfg.ccEmail||'';
   }
   document.getElementById('emailModal').style.display='flex';
 };
 window.closeEmailModal=function(){document.getElementById('emailModal').style.display='none';};
 window.saveEmailConfig=function(){
+  const gasUrl=document.getElementById('gas_url').value.trim();
+  if(!gasUrl){alert('Please paste your Google Apps Script Web App URL.');return;}
+  if(!gasUrl.startsWith('https://script.google.com/')){alert('Invalid URL. It should start with https://script.google.com/');return;}
   const cfg={
-    pubkey:document.getElementById('ej_pubkey').value.trim(),
-    service:document.getElementById('ej_service').value.trim(),
-    template:document.getElementById('ej_template').value.trim(),
+    gasUrl:gasUrl,
     ccEmail:document.getElementById('ej_cc_email').value.trim()||null
   };
-  if(!cfg.pubkey||!cfg.service||!cfg.template){alert('Please fill in Public Key, Service ID and Template ID.');return;}
-  localStorage.setItem('tf_email',JSON.stringify(cfg));emailjs.init(cfg.pubkey);toast('✅ Email config saved!');closeEmailModal();
+  localStorage.setItem('tf_email',JSON.stringify(cfg));toast('✅ Email config saved!');closeEmailModal();
 };
+
+// ── Send email via Google Apps Script ──
+async function sendViaGAS(cfg, params){
+  const resp=await fetch(cfg.gasUrl,{method:'POST',body:JSON.stringify(params),headers:{'Content-Type':'text/plain'}});
+  const data=await resp.json();
+  if(!data.success)throw new Error(data.error||'Email sending failed');
+  return data;
+}
 
 // ── Send a test email to verify setup ──
 window.testComplianceEmail=async function(){
   const cfg=getEmailConfig();
-  if(!cfg||!cfg.pubkey||!cfg.service||!cfg.template){toast('⚠ Please fill in and save your EmailJS credentials first.');return;}
+  if(!cfg||!cfg.gasUrl){toast('⚠ Please paste and save your Google Apps Script URL first.');return;}
   const me=currentUserProfile;if(!me?.email){toast('⚠ Your profile has no email address.');return;}
   try{
-    emailjs.init(cfg.pubkey);
-    await emailjs.send(cfg.service,cfg.template,{
+    await sendViaGAS(cfg,{
       to_name:me.name,
       to_email:me.email,
       task_title:'[Test] GST Monthly Filing',
@@ -2751,15 +2785,14 @@ window.testComplianceEmail=async function(){
       task_status:'Pending',
       task_priority:'Tax',
       assigned_by:me.name,
-      context:'This is a test email from Ginesysone Finance Task Board to verify your EmailJS setup is working correctly.'
+      context:'This is a test email from Ginesysone Finance Task Board to verify your email setup is working correctly.'
     });
     toast(`✅ Test email sent to ${me.email}!`);
-  }catch(e){toast('⚠ Test failed: '+(e.text||e.message));}
+  }catch(e){toast('⚠ Test failed: '+e.message);}
 };
 async function sendTaskEmail(task,assigneeMember){
-  const cfg=getEmailConfig();if(!cfg||!assigneeMember?.email)return;
+  const cfg=getEmailConfig();if(!cfg||!cfg.gasUrl||!assigneeMember?.email)return;
   try{
-    emailjs.init(cfg.pubkey);
     const params={
       to_name:assigneeMember.name,
       to_email:assigneeMember.email,
@@ -2770,21 +2803,20 @@ async function sendTaskEmail(task,assigneeMember){
       assigned_by:currentUserProfile?.name||'Admin',
       context:'You have been assigned a new task.'
     };
-    await emailjs.send(cfg.service,cfg.template,params);
+    await sendViaGAS(cfg,params);
     // CC to admin if set and different from assignee
     if(cfg.ccEmail&&cfg.ccEmail!==assigneeMember.email){
-      await emailjs.send(cfg.service,cfg.template,{...params,to_name:'Admin',to_email:cfg.ccEmail,context:`[CC] Task assigned to ${assigneeMember.name}.`});
+      await sendViaGAS(cfg,{...params,to_name:'Admin',to_email:cfg.ccEmail,context:`[CC] Task assigned to ${assigneeMember.name}.`});
     }
     toast(`📧 Email sent to ${assigneeMember.name}!`);
-  }catch(e){toast('⚠ Email failed: '+(e.text||e.message));}
+  }catch(e){toast('⚠ Email failed: '+e.message);}
 }
 
 // ── Custom subject/context email (used by automations) ──
 async function sendTaskEmailCustom(task,assigneeMember,context){
-  const cfg=getEmailConfig();if(!cfg||!assigneeMember?.email)return;
+  const cfg=getEmailConfig();if(!cfg||!cfg.gasUrl||!assigneeMember?.email)return;
   try{
-    emailjs.init(cfg.pubkey);
-    await emailjs.send(cfg.service,cfg.template,{
+    await sendViaGAS(cfg,{
       to_email:assigneeMember.email,
       to_name:assigneeMember.name,
       task_title:task.title,
@@ -2794,14 +2826,13 @@ async function sendTaskEmailCustom(task,assigneeMember,context){
       assigned_by:currentUserProfile?.name||'Admin',
       context:context||''
     });
-  }catch(e){console.warn('Email failed:',e.text||e.message);}
+  }catch(e){console.warn('Email failed:',e.message);}
 }
 
 // ── Compliance reminder email ──
 async function sendComplianceEmail(c, assigneeMember, reason){
-  const cfg=getEmailConfig();if(!cfg||!assigneeMember?.email)return;
+  const cfg=getEmailConfig();if(!cfg||!cfg.gasUrl||!assigneeMember?.email)return;
   try{
-    emailjs.init(cfg.pubkey);
     const dueDisplay=c.due?new Date(c.due+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Not set';
     const params={
       to_name:  assigneeMember.name,
@@ -2813,13 +2844,13 @@ async function sendComplianceEmail(c, assigneeMember, reason){
       assigned_by:   currentUserProfile?.name||'Admin',
       context:       reason||'Compliance reminder'
     };
-    await emailjs.send(cfg.service,cfg.template,params);
+    await sendViaGAS(cfg,params);
     // CC to admin if set and different from assignee
     if(cfg.ccEmail&&cfg.ccEmail!==assigneeMember.email){
-      await emailjs.send(cfg.service,cfg.template,{...params,to_name:'Admin',to_email:cfg.ccEmail,context:`[CC] ${reason||'Compliance reminder'} (assigned to ${assigneeMember.name})`});
+      await sendViaGAS(cfg,{...params,to_name:'Admin',to_email:cfg.ccEmail,context:`[CC] ${reason||'Compliance reminder'} (assigned to ${assigneeMember.name})`});
     }
     toast(`📧 Compliance reminder sent to ${assigneeMember.name}!`);
-  }catch(e){toast('⚠ Compliance email failed: '+(e.text||e.message));}
+  }catch(e){toast('⚠ Compliance email failed: '+e.message);}
 }
 async function log(tid,mid,detail){await push(ref(db,'activity'),{taskId:tid,memberId:mid,detail,ts:Date.now()});}
 
@@ -2896,6 +2927,7 @@ function getFiltered(){
 // ── TASK CARD ──
 function taskCardHtml(t,isPersonal=false,groupBy='priority'){
   const p=P[t.priority]||P.medium,s_=S[t.status]||S.todo,assignee=members.find(m=>m.id===t.assigneeId),due=fd(t.due);
+  const assigneeDisplayName=assignee?assignee.name:(t.assigneeName||null);
   const cmtCount=t.comments&&typeof t.comments==='object'?Object.keys(t.comments).length:0;
   const isDone=t.status==='done';const tags=t.tags||[];const subtasks=t.subtasks||[];
   const doneSubtasks=subtasks.filter(s=>s.done).length;
@@ -2912,7 +2944,9 @@ function taskCardHtml(t,isPersonal=false,groupBy='priority'){
     ?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:.71rem;color:var(--accent);font-weight:700;background:var(--accent-light);padding:2px 8px;border-radius:99px;border:1.5px solid var(--accent-mid)">👤 Personal</span>`
     :(assignee
       ?`<div style="display:flex;align-items:center;gap:6px">${av(assignee,22)}<span style="font-size:.73rem;color:var(--ink-mid);font-weight:500">${esc(assignee.name)}</span></div>`
-      :`<span style="font-size:.71rem;color:var(--ink-dim);font-style:italic">Unassigned</span>`);
+      :(assigneeDisplayName
+        ?`<div style="display:flex;align-items:center;gap:6px">${av({name:assigneeDisplayName,color:'#64748b'},22)}<span style="font-size:.73rem;color:var(--ink-mid);font-weight:500">${esc(assigneeDisplayName)}</span></div>`
+        :(t.assigneeId?`<span style="font-size:.71rem;color:var(--ink-dim);font-style:italic">Assigned</span>`:`<span style="font-size:.71rem;color:var(--ink-dim);font-style:italic">Unassigned</span>`)));
   const dueHtml=due?`<span style="font-size:.68rem;color:${due.cls==='overdue'?'var(--red)':due.cls==='warning'?'var(--amber)':'var(--ink-dim)'};font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:3px">📅 ${due.text}</span>`:'';
   const priorityFlag=`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:99px;font-size:.66rem;font-weight:700;border:1.5px solid;color:${p.color};background:${p.bg};border-color:${p.border};white-space:nowrap">${p.icon} ${p.label}</span>`;
   return`<div class="task-card${isSelected?' selected':''}" id="tc_${t.id}" style="${leftBorder}" onclick="openDetail('${t.id}')" ondblclick="event.stopPropagation();openTaskModal('${t.id}')"
@@ -2955,13 +2989,13 @@ function taskCardHtml(t,isPersonal=false,groupBy='priority'){
 // ── LIST VIEW ROW ──
 function taskListRowHtml(t,isPersonal=false){
   const p=P[t.priority]||P.medium,s_=S[t.status]||S.todo;
-  const assignee=members.find(m=>m.id===t.assigneeId);const due=fd(t.due);const isDone=t.status==='done';
+  const assignee=members.find(m=>m.id===t.assigneeId);const aName=assignee?assignee.name:(t.assigneeName||null);const due=fd(t.due);const isDone=t.status==='done';
   return`<tr class="${isDone?'done-row':''}" onclick="openDetail('${t.id}')">
     <td onclick="event.stopPropagation()"><button class="checkbox-btn ${isDone?'checked':''}" onclick="toggleTaskDone(event,'${t.id}')"></button></td>
     <td><div class="lv-title">${esc(t.title)}</div>${t.description?`<div class="lv-desc">${t.description.replace(/<[^>]+>/g,' ').trim()}</div>`:''}</td>
     <td><span class="badge" style="color:${s_.color};background:${s_.bg};border-color:${s_.border}">${s_.label}</span></td>
     <td><span class="badge" style="color:${p.color};background:${p.bg};border-color:${p.border}">${p.icon} ${p.label}</span></td>
-    <td>${isPersonal?`<span style="font-size:.75rem;color:var(--accent);font-weight:600">👤 Me</span>`:(assignee?`<div style="display:flex;align-items:center;gap:6px">${av(assignee,18)}<span style="font-size:.78rem;font-weight:500">${esc(assignee.name)}</span></div>`:'<span style="font-size:.72rem;color:var(--ink-dim)">—</span>')}</td>
+    <td>${isPersonal?`<span style="font-size:.75rem;color:var(--accent);font-weight:600">👤 Me</span>`:(assignee?`<div style="display:flex;align-items:center;gap:6px">${av(assignee,18)}<span style="font-size:.78rem;font-weight:500">${esc(assignee.name)}</span></div>`:(aName?`<div style="display:flex;align-items:center;gap:6px">${av({name:aName,color:'#64748b'},18)}<span style="font-size:.78rem;font-weight:500">${esc(aName)}</span></div>`:(t.assigneeId?'<span style="font-size:.72rem;color:var(--ink-dim)">Assigned</span>':'<span style="font-size:.72rem;color:var(--ink-dim)">—</span>')))}</td>
     <td style="font-size:.7rem;font-family:'JetBrains Mono',monospace">${t.timeLogged?fmtTime(t.timeLogged):'—'}</td>
     <td style="font-size:.72rem;font-family:'JetBrains Mono',monospace;color:${due?.cls==='overdue'?'var(--red)':due?.cls==='warning'?'var(--amber)':'var(--ink-dim)'};white-space:nowrap">${due?due.text:'—'}</td>
   </tr>`;
@@ -2994,7 +3028,8 @@ function taskSpreadsheetRowHtml(t, isPersonal=false){
     <td class="ap-td-assignee">
       ${isPersonal?`<span style="font-size:.72rem;color:var(--accent);font-weight:600">👤 Me</span>`:
         assignee?`<div style="display:flex;align-items:center;gap:6px">${av(assignee,24)}<span style="font-size:.78rem;font-weight:500;color:var(--ink)">${esc(assignee.name)}</span></div>`:
-        '<span style="color:var(--border2);font-size:.75rem">Unassigned</span>'}
+        (t.assigneeName?`<div style="display:flex;align-items:center;gap:6px">${av({name:t.assigneeName,color:'#64748b'},24)}<span style="font-size:.78rem;font-weight:500;color:var(--ink)">${esc(t.assigneeName)}</span></div>`:
+        (t.assigneeId?'<span style="color:var(--border2);font-size:.75rem">Assigned</span>':'<span style="color:var(--border2);font-size:.75rem">Unassigned</span>'))}
     </td>
     <td class="ap-td-due" style="color:${dueColor};font-size:.78rem;font-family:'JetBrains Mono',monospace;white-space:nowrap">
       ${due?`📅 ${due.text}`:'<span style="color:var(--border2)">—</span>'}
@@ -3091,7 +3126,7 @@ function renderDetail(){
       <div class="meta-grid">
         <div class="mi"><div class="ml">Status</div>${canEdit||t.assigneeId===currentUser?.uid?`<select class="ms" onchange="qu('${t.id}','status',this.value)">${sOpts}</select>`:`<span style="font-size:.83rem;font-weight:700;color:${s_.color}">${s_.label}</span>`}</div>
         <div class="mi"><div class="ml">Priority</div>${canEdit?`<select class="ms" onchange="qu('${t.id}','priority',this.value)">${pOpts}</select>`:`<span style="font-size:.83rem;font-weight:700;color:${p.color}">${p.icon} ${p.label}</span>`}</div>
-        <div class="mi"><div class="ml">Assigned To</div>${(isAdmin()&&t.source!=='personal')?`<select class="ms" onchange="qu('${t.id}','assigneeId',this.value)"><option value="" ${!t.assigneeId?'selected':''}>— Unassigned —</option>${mOpts}</select>`:`<span style="font-size:.83rem;font-weight:700">${t.source==='personal'?'👤 Me':members.find(m=>m.id===t.assigneeId)?.name||'Unassigned'}</span>`}</div>
+        <div class="mi"><div class="ml">Assigned To</div>${(isAdmin()&&t.source!=='personal')?`<select class="ms" onchange="qu('${t.id}','assigneeId',this.value)"><option value="" ${!t.assigneeId?'selected':''}>— Unassigned —</option>${mOpts}</select>`:`<span style="font-size:.83rem;font-weight:700">${t.source==='personal'?'👤 Me':(members.find(m=>m.id===t.assigneeId)?.name||t.assigneeName||'Unassigned')}</span>`}</div>
         <div class="mi"><div class="ml">Due Date</div><div style="font-size:.83rem;font-weight:700;color:${due?.cls==='overdue'?'var(--red)':due?.cls==='warning'?'var(--amber)':'var(--ink)'}">${due?due.text:'—'}</div></div>
         <div class="mi"><div class="ml">Assigned On</div><div style="font-size:.83rem;font-weight:700">${t.assignedAt?new Date(t.assignedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—'}</div></div>
         ${t.recur?`<div class="mi"><div class="ml">Recurring</div><div style="font-size:.83rem;font-weight:700">🔄 ${t.recur}</div></div>`:''}
@@ -3160,7 +3195,7 @@ window.reactComment=async function(tid,cid,emojiB64){
 window.qu=async function(tid,field,val){
   const t=tasks.find(x=>x.id===tid);if(!t)return;
   const upd={};upd[field]=val||null;
-  if(field==='assigneeId')upd.assignedAt=val?Date.now():null;
+  if(field==='assigneeId'){upd.assignedAt=val?Date.now():null;const am=val?members.find(x=>x.id===val):null;upd.assigneeName=am?am.name:null;}
   if(field==='status')upd.finishedAt=val==='done'?Date.now():null;
   await update(ref(db,`tasks/${tid}`),upd);
   let detail='';
@@ -3214,7 +3249,7 @@ window.openTaskModal=function(tid,forceSource){
     if(ar)ar.style.display='grid';if(pn)pn.style.display='none';if(en)en.style.display='';
     document.getElementById('tAssignee').innerHTML=`<option value="">— Unassigned —</option>`+members.map(m=>`<option value="${m.id}" ${t?.assigneeId===m.id?'selected':''}>${esc(m.name)}</option>`).join('');
     const cfg=getEmailConfig();const note=document.getElementById('emailNote');
-    if(note){if(cfg){note.className='info-box';note.textContent='✅ EmailJS configured!';}else{note.className='warn-box';note.innerHTML='⚠ EmailJS not configured. <a href="#" onclick="closeTaskModal();openEmailConfig();return false" style="color:var(--accent);font-weight:600">Set up</a>';}}
+    if(note){if(cfg){note.className='info-box';note.textContent='✅ Email configured (Google Apps Script)';}else{note.className='warn-box';note.innerHTML='⚠ Email not configured. <a href="#" onclick="closeTaskModal();openEmailConfig();return false" style="color:var(--accent);font-weight:600">Set up</a>';}}
   }catch(err){console.error('openTaskModal error:',err);}
 };
 window.closeTaskModal=function(){document.getElementById('taskModal').style.display='none';};
@@ -3228,7 +3263,9 @@ window.saveTask=async function(){
   const desc=document.getElementById('tDesc').innerHTML;
   const estimatedTime=parseFloat(document.getElementById('tEstimate')?.value)||0;
   const taskLink=(document.getElementById('tLink')?.value||'').trim()||null;
-  const data={title,description:desc,status:document.getElementById('tStatus').value,priority:document.getElementById('tPriority').value,assigneeId,due:document.getElementById('tDue').value||null,assignedAt,source,tags:pendingTags,subtasks:pendingSubtasks,color:pendingColor,recur:pendingRecur||null,estimatedTime:estimatedTime||null,link:taskLink};
+  const assigneeMemberObj=assigneeId?members.find(m=>m.id===assigneeId):null;
+  const assigneeName=assigneeMemberObj?assigneeMemberObj.name:null;
+  const data={title,description:desc,status:document.getElementById('tStatus').value,priority:document.getElementById('tPriority').value,assigneeId,assigneeName,due:document.getElementById('tDue').value||null,assignedAt,source,tags:pendingTags,subtasks:pendingSubtasks,color:pendingColor,recur:pendingRecur||null,estimatedTime:estimatedTime||null,link:taskLink};
   if(eid){await update(ref(db,`tasks/${eid}`),data);await log(eid,currentUser.uid,'Task updated');if(assigneeId&&assigneeId!==prevAssignee){const assignee=members.find(m=>m.id===assigneeId);await sendTaskEmail({...data,id:eid},assignee);}}
   else{const newId=uid();await set(ref(db,`tasks/${newId}`),{...data,createdBy:currentUser.uid,ts:Date.now(),comments:{}});await log(newId,currentUser.uid,'Task created');if(assigneeId){const assignee=members.find(m=>m.id===assigneeId);await sendTaskEmail({...data,id:newId},assignee);}}
   closeTaskModal();toast('✅ Task saved!');
@@ -3838,13 +3875,16 @@ async function spawnNextCycle(c){
   if(exists) return;
   const newId=uid();
   const nextDue=nextDueDate(c.due, c.recur);
+  // Resolve assigneeName from members array in case only assigneeId was stored
+  const _assigneeMember=c.assigneeId?members.find(m=>m.id===c.assigneeId):null;
   const newC={
     name:c.name, month:nextMonth, type:c.type,
     due:nextDue, status:'pending', recur:c.recur,
     remarks:'', createdBy:c.createdBy||null,
-    assigneeId:c.assigneeId||null,  // carry over assignee to next cycle
-    submitDate:null, filingDate:null, // fresh dates for next cycle
-    taskId:null,  // fresh task for next cycle
+    assigneeId:c.assigneeId||null,        // carry over assignee to next cycle
+    assigneeName:_assigneeMember?.name||c.assigneeName||null, // carry over name too
+    submitDate:null, filingDate:null,     // fresh dates for next cycle
+    taskId:null,                          // fresh task for next cycle
     ts:Date.now(), updatedAt:Date.now(), id:newId,
     spawnedFrom:c.id
   };
@@ -4158,6 +4198,22 @@ window.saveCompliance=async function(){
     if(newStatus==='completed'&&prevStatus!=='completed'&&pendingCRecur){
       await spawnNextCycle({...data,id:eid,status:'completed'});
     }
+    // ── AUTO-SYNC assignee to all pending recurrences of the same compliance ──
+    if(assigneeId&&assigneeId!==prevAssigneeId&&data.recur){
+      const siblings=complianceItems.filter(x=>
+        x.id!==eid &&
+        x.name===data.name &&
+        x.recur===data.recur &&
+        x.status!=='completed' &&
+        (!x.assigneeId||x.assigneeId!==assigneeId)
+      );
+      if(siblings.length){
+        const updates={};
+        siblings.forEach(s=>{updates[`compliance/${s.id}/assigneeId`]=assigneeId;updates[`compliance/${s.id}/updatedAt`]=Date.now();});
+        await update(ref(db,'/'),updates);
+        toast(`✅ Assignee synced to ${siblings.length} other pending cycle(s)`);
+      }
+    }
     // Email: assignee changed
     if(assigneeId&&assigneeId!==prevAssigneeId){
       const assignee=members.find(m=>m.id===assigneeId);
@@ -4193,7 +4249,7 @@ window.sendComplianceReminder=async function(cid){
   const assignee=c.assigneeId?members.find(m=>m.id===c.assigneeId):null;
   if(!assignee){toast('⚠ No assignee set for this compliance record.');return;}
   const cfg=getEmailConfig();
-  if(!cfg){toast('⚠ Email not configured. Click 📧 in the header to set up EmailJS.');return;}
+  if(!cfg){toast('⚠ Email not configured. Click 📧 in the header to set up Google Apps Script.');return;}
   const daysLeft=c.due?Math.round((new Date(c.due+'T00:00:00')-new Date().setHours(0,0,0,0))/86400000):null;
   const reason=daysLeft!=null
     ?`Manual reminder: ${daysLeft>0?`Due in ${daysLeft} day${daysLeft!==1?'s':''}`:'Due today or overdue'}.`
@@ -5241,7 +5297,7 @@ setInterval(()=>{
   if(overdue.length>0){sendBrowserNotification('Ginesysone Finance Task Board','You have '+overdue.length+' overdue task'+(overdue.length>1?'s':'')+'!');}
 },60000);
 
-const savedEmail=localStorage.getItem('tf_email');if(savedEmail){try{const c=JSON.parse(savedEmail);emailjs.init(c.pubkey);}catch(e){}}
+const savedEmail=localStorage.getItem('tf_email');/* Google Apps Script - no init needed */
 // Auto-init portal toggle UI to 'member' on load
 selectPortal('member');
 window.openEmailConfig=openEmailConfig;
@@ -5410,6 +5466,51 @@ setInterval(checkComplianceReminders,3600000);
   document.head.appendChild(el);
   // sidebar Add New button is now in HTML directly as lp-add-btn
 })();
+
+// ── SYNC MISSING MEMBERS ──
+window.syncMissingMembers = async function(){
+  if(!isAdmin()){toast('Only admins can sync members.');return;}
+  const existing = new Set(members.map(m=>m.id));
+  const modal = document.createElement('div');
+  modal.id='syncModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(15,22,35,.45);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:580px;box-shadow:var(--shadow-xl);font-family:'Figtree',sans-serif">
+    <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:10px">🔄 Sync Missing Members</div>
+    <div style="font-size:.82rem;color:var(--ink-mid);margin-bottom:14px;line-height:1.55">Enter the <strong>UID</strong>, <strong>Email</strong>, and <strong>Name</strong> for each missing member.<br>Find UIDs in <strong>Firebase Console → Authentication → Users</strong> (the User UID column).</div>
+    <div id="syncRows" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+    <button onclick="addSyncRow()" style="font-size:.78rem;padding:6px 12px;border:1.5px dashed var(--border2);border-radius:8px;background:none;cursor:pointer;color:var(--ink-mid);width:100%;margin-bottom:14px">+ Add row</button>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="document.getElementById('syncModal').remove()" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:none;cursor:pointer;font-size:.83rem;font-family:'Figtree',sans-serif">Cancel</button>
+      <button onclick="doSyncMembers()" style="padding:8px 16px;background:var(--grad-accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.83rem;font-weight:600;font-family:'Figtree',sans-serif">Save Members</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  for(let i=0;i<4;i++) addSyncRow();
+};
+window.addSyncRow=function(){
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:2fr 2fr 1.5fr 22px;gap:6px;align-items:center';
+  row.innerHTML='<input placeholder="User UID" class="input sync-uid" style="font-size:.72rem;padding:6px 8px;font-family:JetBrains Mono,monospace"><input placeholder="Email" class="input sync-email" style="font-size:.72rem;padding:6px 8px"><input placeholder="Name" class="input sync-name" style="font-size:.72rem;padding:6px 8px"><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--ink-dim);font-size:.85rem;padding:0">✕</button>';
+  document.getElementById('syncRows').appendChild(row);
+};
+window.doSyncMembers=async function(){
+  const rows=document.querySelectorAll('#syncRows > div');
+  const COLORS2=['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#3b82f6','#10b981'];
+  let added=0,skipped=0,i=0;
+  for(const row of rows){
+    const uid_=row.querySelector('.sync-uid').value.trim();
+    const email_=row.querySelector('.sync-email').value.trim();
+    const name_=row.querySelector('.sync-name').value.trim();
+    if(!uid_||!email_){i++;continue;}
+    const snap=await new Promise(res=>onValue(ref(db,'members/'+uid_),res,{onlyOnce:true}));
+    if(snap.val()){skipped++;i++;continue;}
+    const finalName=name_||(email_.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
+    await set(ref(db,'members/'+uid_),{name:finalName,email:email_,role:'member',color:COLORS2[i%COLORS2.length],createdAt:Date.now()});
+    added++;i++;
+  }
+  document.getElementById('syncModal').remove();
+  toast('\u2705 '+added+' member(s) added'+(skipped?' \u00b7 '+skipped+' already existed':''));
+};
 
 // ── CLAIM ADMIN ROLE ──
 window.claimAdminRole = async function(){
