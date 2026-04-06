@@ -1348,6 +1348,7 @@ select option{background:var(--white);color:var(--ink)}
               <div style="display:flex;gap:3px;background:var(--bg2);padding:3px;border-radius:var(--radius-sm);border:1px solid var(--border);flex-shrink:0">
                 <button id="auditModuleInternal" class="tab active" onclick="switchAuditModule('internal')" style="font-size:.75rem;padding:4px 12px;color:var(--accent)">🏢 Internal</button>
                 <button id="auditModuleStatutory" class="tab" onclick="switchAuditModule('statutory')" style="font-size:.75rem;padding:4px 12px">⚖️ Statutory</button>
+                <button id="auditModuleTax" class="tab" onclick="switchAuditModule('tax')" style="font-size:.75rem;padding:4px 12px">🧾 Tax Audit</button>
               </div>
               <div style="width:1px;height:30px;background:var(--border);flex-shrink:0"></div>
               <!-- Filters — compact inline with labels above -->
@@ -1882,35 +1883,22 @@ select option{background:var(--white);color:var(--ink)}
       <!-- Script to copy -->
       <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin:4px 0 6px">Google Apps Script Code (copy this)</div>
       <div style="position:relative">
-        <pre id="gasScriptCode" style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:.72rem;overflow-x:auto;white-space:pre;max-height:200px;overflow-y:auto;color:var(--ink);line-height:1.6">function doPost(e) {
-  try {
-    var d = JSON.parse(e.postData.contents);
-    var subject = '📋 ' + (d.task_title || 'Task Notification');
-    var body = 'Hi ' + (d.to_name || 'Team') + ',\n\n'
-      + (d.context || 'You have a task update.') + '\n\n'
-      + '📌 Task: ' + (d.task_title || '-') + '\n'
-      + '⚡ Priority: ' + (d.task_priority || '-') + '\n'
-      + '📊 Status: ' + (d.task_status || '-') + '\n'
-      + '📅 Due: ' + (d.task_due || 'Not set') + '\n'
-      + '👤 Assigned by: ' + (d.assigned_by || '-') + '\n\n'
-      + '— Ginesysone Finance Task Board';
-    if (d.to_email) {
-      MailApp.sendEmail({
-        to: d.to_email,
-        subject: subject,
-        body: body
-      });
-    }
-    return ContentService.createTextOutput(
-      JSON.stringify({success: true})
-    ).setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(
-      JSON.stringify({success: false, error: err.message})
-    ).setMimeType(ContentService.MimeType.JSON);
-  }
+        <pre id="gasScriptCodeDisplay" style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:.72rem;overflow-x:auto;white-space:pre;max-height:200px;overflow-y:auto;color:var(--ink);line-height:1.6">// ✨ Enhanced Professional HTML Email Script
+// Sends color-coded HTML emails for Tasks, Compliance &amp; Audit
+// Auto-detects type from [Compliance] / [Audit] prefix in title
+// Smart subject lines for reminders, overdue, completion &amp; queries
+
+function doPost(e) {
+  var d = JSON.parse(e.postData.contents);
+  // ... Detects task type, builds HTML email with:
+  //  • Color-coded header (purple=Task, teal=Compliance, amber=Audit)
+  //  • Priority &amp; Status badges
+  //  • Context-aware banners (reminder/overdue/completed/query)
+  //  • Professional table layout with due date &amp; assignee
+  //  • Plain text fallback
+  // Click 📋 Copy to get the full script →
 }</pre>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('gasScriptCode').textContent);toast('✅ Script copied!')" class="btn btn-ghost btn-xs" style="position:absolute;top:6px;right:6px">📋 Copy</button>
+        <button onclick="copyGasScript()" class="btn btn-ghost btn-xs" style="position:absolute;top:6px;right:6px">📋 Copy</button>
       </div>
 
       <!-- Step 2: Paste URL -->
@@ -1928,6 +1916,23 @@ select option{background:var(--white);color:var(--ink)}
       <!-- Benefits callout -->
       <div style="background:var(--green-bg);border:1.5px solid var(--green-border);border-radius:var(--radius-sm);padding:10px 14px;font-size:.77rem;color:var(--green);margin-bottom:14px">
         ✅ <strong>100% Free</strong> — No limits, no sign-ups, sends directly from your Gmail!
+      </div>
+
+      <!-- ═══ DAILY DIGEST SETUP ═══ -->
+      <div style="border-top:2px solid var(--border);margin-top:6px;padding-top:16px">
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin-bottom:8px">📊 Daily Digest Email (10 AM, Mon-Fri)</div>
+        <div class="info-box" style="margin-bottom:12px;font-size:.76rem">
+          Automatically sends <strong>Today's Tasks</strong>, <strong>Overdue Tasks</strong> &amp; <strong>Upcoming Tasks</strong> to every team member at <strong>10:00 AM IST</strong> (Mon-Fri).<br>
+          Admin also receives a <strong>full team summary</strong>. Zero manual work required.
+        </div>
+        <div id="digestStatusBox" style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+          <span id="digestStatusIcon" style="font-size:1.3rem">⏸</span>
+          <div style="flex:1">
+            <div id="digestStatusText" style="font-size:.82rem;font-weight:600;color:var(--ink-mid)">Checking status…</div>
+            <div id="digestStatusSub" style="font-size:.7rem;color:var(--ink-dim);margin-top:2px"></div>
+          </div>
+          <button id="digestToggleBtn" class="btn btn-primary btn-sm" onclick="toggleDailyDigest()" style="width:auto;display:none">Enable</button>
+        </div>
       </div>
 
       <!-- Test + Save -->
@@ -2752,6 +2757,74 @@ window.openEmailConfig=function(){
   document.getElementById('emailModal').style.display='flex';
 };
 window.closeEmailModal=function(){document.getElementById('emailModal').style.display='none';};
+window.copyGasScript=function(){
+  var script = [
+'function doPost(e) {',
+'  try {',
+'    var d = JSON.parse(e.postData.contents);',
+'    var type = "task", title = d.task_title || "Task Notification";',
+'    if (title.indexOf("[Compliance]") === 0) { type = "compliance"; title = title.replace("[Compliance] ", ""); }',
+'    else if (title.indexOf("[Audit]") === 0) { type = "audit"; title = title.replace("[Audit] ", ""); }',
+'    var colors = {',
+'      task:       { accent: "#5B4FE9", badge: "📋 Task", label: "Task Board" },',
+'      compliance: { accent: "#0F766E", badge: "🛡 Compliance", label: "Compliance Tracker" },',
+'      audit:      { accent: "#B45309", badge: "📋 Audit", label: "Audit Tracker" }',
+'    };',
+'    var c = colors[type];',
+'    var prioColors = {"Critical":{bg:"#FEF2F2",color:"#B91C1C"},"High":{bg:"#FFF7ED",color:"#C2410C"},"Medium":{bg:"#FFFBEB",color:"#B45309"},"Low":{bg:"#ECFDF5",color:"#047857"}};',
+'    var prio = d.task_priority || "Medium";',
+'    var pc = prioColors[prio] || prioColors["Medium"];',
+'    var statusColors = {"To Do":{bg:"#F1F5F9",color:"#475569"},"In Progress":{bg:"#EFF6FF",color:"#1D4ED8"},"In Review":{bg:"#F5F3FF",color:"#6D28D9"},"Done":{bg:"#ECFDF5",color:"#047857"},"Completed":{bg:"#ECFDF5",color:"#047857"},"pending":{bg:"#FFFBEB",color:"#B45309"},"in_progress":{bg:"#EFF6FF",color:"#1D4ED8"},"completed":{bg:"#ECFDF5",color:"#047857"},"overdue":{bg:"#FEF2F2",color:"#B91C1C"},"Not Started":{bg:"#F1F5F9",color:"#475569"},"Gathering":{bg:"#FFFBEB",color:"#B45309"},"Ready":{bg:"#EFF6FF",color:"#1D4ED8"},"Shared":{bg:"#F5F3FF",color:"#6D28D9"},"Query Raised":{bg:"#FEF2F2",color:"#B91C1C"},"Replied":{bg:"#EFF6FF",color:"#1D4ED8"},"Accepted":{bg:"#ECFDF5",color:"#047857"}};',
+'    var status = d.task_status || "";',
+'    var sc = statusColors[status] || {bg:"#F1F5F9",color:"#475569"};',
+'    var context = d.context || "You have a task update.";',
+'    var isReminder = context.indexOf("Reminder") >= 0;',
+'    var isOverdue = context.indexOf("overdue") >= 0;',
+'    var isComplete = context.indexOf("completed") >= 0 || context.indexOf("✅") >= 0;',
+'    var isQuery = context.indexOf("query") >= 0 || context.indexOf("❓") >= 0;',
+'    var ctxBg="#F8FAFC",ctxBd="#E2E8F0",ctxC="#334155";',
+'    if(isOverdue){ctxBg="#FEF2F2";ctxBd="#FECACA";ctxC="#991B1B";}',
+'    else if(isReminder){ctxBg="#FFFBEB";ctxBd="#FDE68A";ctxC="#92400E";}',
+'    else if(isComplete){ctxBg="#ECFDF5";ctxBd="#A7F3D0";ctxC="#065F46";}',
+'    else if(isQuery){ctxBg="#FEF2F2";ctxBd="#FECACA";ctxC="#991B1B";}',
+'    var si = type==="compliance"?"🛡":type==="audit"?"📋":"📌";',
+'    var subject = si+" "+title;',
+'    if(isReminder) subject="⏰ Reminder: "+title;',
+'    if(isOverdue) subject="🚨 Overdue: "+title;',
+'    if(isComplete) subject="✅ Completed: "+title;',
+'    if(isQuery) subject="❓ Query: "+title;',
+'    var html = "<table width=\\"100%\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"background:#F0F2F8;padding:32px 16px;font-family:Arial,sans-serif\\"><tr><td align=\\"center\\">"',
+'    +"<table width=\\"560\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"max-width:560px;width:100%\\">"',
+'    +"<tr><td style=\\"background:"+c.accent+";border-radius:16px 16px 0 0;padding:28px 32px 22px\\">"',
+'    +"<table width=\\"100%\\"><tr><td><span style=\\"background:rgba(255,255,255,.2);border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;color:#fff\\">"+c.badge+"</span></td>"',
+'    +"<td align=\\"right\\"><span style=\\"font-size:12px;color:rgba(255,255,255,.7)\\">Ginesysone Finance</span></td></tr></table>"',
+'    +"<div style=\\"margin-top:16px;font-size:22px;font-weight:800;color:#fff;line-height:1.3\\">"+_esc(title)+"</div></td></tr>"',
+'    +"<tr><td style=\\"background:#fff;padding:0 32px\\"><div style=\\"margin-top:24px;background:"+ctxBg+";border:1.5px solid "+ctxBd+";border-radius:10px;padding:14px 18px;font-size:14px;color:"+ctxC+";font-weight:600\\">"+_esc(context)+"</div></td></tr>"',
+'    +"<tr><td style=\\"background:#fff;padding:20px 32px 4px;font-size:15px;color:#334155\\">Hi <strong>"+_esc(d.to_name||"Team")+"</strong>,</td></tr>"',
+'    +"<tr><td style=\\"background:#fff;padding:12px 32px 24px\\"><table width=\\"100%\\" style=\\"border:1.5px solid #E5E8F0;border-radius:12px;overflow:hidden\\">"',
+'    +"<tr><td style=\\"padding:12px 16px;font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #F1F5F9;width:110px\\">Priority</td><td style=\\"padding:12px 16px;border-bottom:1px solid #F1F5F9\\"><span style=\\"background:"+pc.bg+";color:"+pc.color+";font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px\\">"+_esc(prio)+"</span></td></tr>"',
+'    +"<tr><td style=\\"padding:12px 16px;font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #F1F5F9;width:110px\\">Status</td><td style=\\"padding:12px 16px;border-bottom:1px solid #F1F5F9\\"><span style=\\"background:"+sc.bg+";color:"+sc.color+";font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px\\">"+_esc(status||"Pending")+"</span></td></tr>"',
+'    +"<tr><td style=\\"padding:12px 16px;font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #F1F5F9;width:110px\\">Due Date</td><td style=\\"padding:12px 16px;border-bottom:1px solid #F1F5F9;font-size:14px;font-weight:600;color:#1E293B\\">"+_esc(d.task_due||"Not set")+"</td></tr>"',
+'    +"<tr><td style=\\"padding:12px 16px;font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;width:110px\\">Assigned By</td><td style=\\"padding:12px 16px;font-size:14px;color:#475569;font-weight:500\\">"+_esc(d.assigned_by||"Admin")+"</td></tr>"',
+'    +"</table></td></tr>"',
+'    +"<tr><td style=\\"background:#fff;border-radius:0 0 16px 16px;padding:8px 32px 28px\\"><div style=\\"border-top:1.5px solid #E5E8F0;padding-top:16px;text-align:center\\">"',
+'    +"<div style=\\"font-size:12px;color:#94A3B8\\">Sent from <strong style=\\"color:#64748B\\">Ginesysone Finance "+c.label+"</strong></div>"',
+'    +"<div style=\\"font-size:11px;color:#CBD5E1;margin-top:4px\\">Automated notification · Do not reply</div>"',
+'    +"</div></td></tr>"',
+'    +"</table></td></tr></table>";',
+'    var plain = "Hi "+(d.to_name||"Team")+",\\n\\n"+context+"\\n\\n📌 Task: "+title+"\\n⚡ Priority: "+prio+"\\n📊 Status: "+(status||"Pending")+"\\n📅 Due: "+(d.task_due||"Not set")+"\\n👤 Assigned by: "+(d.assigned_by||"Admin")+"\\n\\n— Ginesysone Finance "+c.label;',
+'    if (d.to_email) {',
+'      MailApp.sendEmail({ to:d.to_email, subject:subject, body:plain, htmlBody:html });',
+'    }',
+'    return ContentService.createTextOutput(JSON.stringify({success:true})).setMimeType(ContentService.MimeType.JSON);',
+'  } catch(err) {',
+'    return ContentService.createTextOutput(JSON.stringify({success:false,error:err.message})).setMimeType(ContentService.MimeType.JSON);',
+'  }',
+'}',
+'function _esc(s){return s?s.toString().replace(/&/g,"\\&amp;").replace(/</g,"\\&lt;").replace(/>/g,"\\&gt;"):"";}'
+  ].join('\n');
+  navigator.clipboard.writeText(script).then(()=>toast('✅ Full script copied to clipboard!')).catch(()=>toast('⚠ Copy failed — try manually'));
+};
 window.saveEmailConfig=function(){
   const gasUrl=document.getElementById('gas_url').value.trim();
   if(!gasUrl){alert('Please paste your Google Apps Script Web App URL.');return;}
@@ -2761,6 +2834,64 @@ window.saveEmailConfig=function(){
     ccEmail:document.getElementById('ej_cc_email').value.trim()||null
   };
   localStorage.setItem('tf_email',JSON.stringify(cfg));toast('✅ Email config saved!');closeEmailModal();
+};
+
+// ── Daily Digest: check/enable/disable ──
+let _digestEnabled=null;
+window.checkDigestStatus=async function(){
+  const cfg=getEmailConfig();
+  const icon=document.getElementById('digestStatusIcon');
+  const text=document.getElementById('digestStatusText');
+  const sub=document.getElementById('digestStatusSub');
+  const btn=document.getElementById('digestToggleBtn');
+  if(!cfg||!cfg.gasUrl){
+    icon.textContent='⚠';text.textContent='Email not configured yet';sub.textContent='Save your GAS URL above first, then enable digest.';
+    btn.style.display='none';_digestEnabled=false;return;
+  }
+  try{
+    const resp=await fetch(cfg.gasUrl,{method:'POST',body:JSON.stringify({action:'check_digest'}),headers:{'Content-Type':'text/plain'}});
+    const data=await resp.json();
+    _digestEnabled=!!data.enabled;
+    if(_digestEnabled){
+      icon.textContent='✅';text.textContent='Daily Digest is ACTIVE';
+      sub.textContent='Emails sent at 10 AM IST (Mon-Fri) to all members'+(data.adminEmail?' · Admin copy: '+data.adminEmail:'');
+      btn.textContent='🔴 Disable';btn.className='btn btn-danger btn-sm';btn.style.display='';
+    } else {
+      icon.textContent='⏸';text.textContent='Daily Digest is OFF';sub.textContent='Click Enable to start automatic daily emails.';
+      btn.textContent='✅ Enable';btn.className='btn btn-primary btn-sm';btn.style.display='';
+    }
+  }catch(e){
+    icon.textContent='⚠';text.textContent='Could not check status';sub.textContent=e.message;
+    btn.textContent='✅ Enable';btn.className='btn btn-primary btn-sm';btn.style.display='';_digestEnabled=false;
+  }
+};
+window.toggleDailyDigest=async function(){
+  const cfg=getEmailConfig();
+  if(!cfg||!cfg.gasUrl){toast('⚠ Save your GAS URL first.');return;}
+  const btn=document.getElementById('digestToggleBtn');
+  btn.disabled=true;btn.textContent='Working…';
+  try{
+    if(_digestEnabled){
+      // Disable
+      await fetch(cfg.gasUrl,{method:'POST',body:JSON.stringify({action:'disable_digest'}),headers:{'Content-Type':'text/plain'}});
+      toast('⏸ Daily digest disabled.');
+    } else {
+      // Enable — send Firebase URL + admin email
+      const firebaseUrl='https://task-flow-65be7-default-rtdb.firebaseio.com';
+      const adminEmail=cfg.ccEmail||currentUserProfile?.email||'';
+      const resp=await fetch(cfg.gasUrl,{method:'POST',body:JSON.stringify({action:'setup_digest',firebaseUrl,adminEmail}),headers:{'Content-Type':'text/plain'}});
+      const data=await resp.json();
+      if(data.success){toast('✅ '+data.message);}else{throw new Error(data.error||'Setup failed');}
+    }
+    await checkDigestStatus();
+  }catch(e){toast('⚠ Error: '+e.message);}
+  btn.disabled=false;
+};
+// Auto-check digest status when email modal opens
+const _origOpenEmailConfig=window.openEmailConfig;
+window.openEmailConfig=function(){
+  _origOpenEmailConfig();
+  setTimeout(()=>checkDigestStatus(),300);
 };
 
 // ── Send email via Google Apps Script ──
@@ -2851,6 +2982,31 @@ async function sendComplianceEmail(c, assigneeMember, reason){
     }
     toast(`📧 Compliance reminder sent to ${assigneeMember.name}!`);
   }catch(e){toast('⚠ Compliance email failed: '+e.message);}
+}
+
+// ── Audit task email ──
+async function sendAuditEmail(item, assigneeMember, areaName, reason){
+  const cfg=getEmailConfig();if(!cfg||!cfg.gasUrl||!assigneeMember?.email)return;
+  try{
+    const dueDisplay=item.dueDate?new Date(item.dueDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Not set';
+    const st=AUDIT_STATUS[item.status||'not_started'];
+    const params={
+      to_name:  assigneeMember.name,
+      to_email: assigneeMember.email,
+      task_title:`[Audit] ${areaName} — ${item.subTask}`,
+      task_priority: (AUDIT_PRIORITY[item.priority]||{}).label||item.priority||'Medium',
+      task_status:   st?.label||item.status||'Not Started',
+      task_due:      dueDisplay,
+      assigned_by:   currentUserProfile?.name||'Admin',
+      context:       reason||'Audit task notification'
+    };
+    await sendViaGAS(cfg,params);
+    // CC to admin if set and different from assignee
+    if(cfg.ccEmail&&cfg.ccEmail!==assigneeMember.email){
+      await sendViaGAS(cfg,{...params,to_name:'Admin',to_email:cfg.ccEmail,context:`[CC] ${reason||'Audit notification'} (assigned to ${assigneeMember.name})`});
+    }
+    toast(`📧 Audit email sent to ${assigneeMember.name}!`);
+  }catch(e){toast('⚠ Audit email failed: '+e.message);}
 }
 async function log(tid,mid,detail){await push(ref(db,'activity'),{taskId:tid,memberId:mid,detail,ts:Date.now()});}
 
@@ -3665,7 +3821,7 @@ function checkOverdueNotifs(){
 async function checkComplianceReminders(){
   if(!currentUser||!isAdmin())return;
   const today=new Date();today.setHours(0,0,0,0);
-  const REMIND_DAYS=[3,1]; // days before due to remind
+  const REMIND_DAYS=[3,2,1]; // days before due to remind
   for(const c of complianceItems){
     if(!c.due||c.status==='completed'||c.status==='overdue')continue;
     const dueDate=new Date(c.due+'T00:00:00');
@@ -3682,6 +3838,32 @@ async function checkComplianceReminders(){
     if(assignee){
       await sendComplianceEmail(c,assignee,
         `⏰ Reminder: This compliance task is due in ${daysLeft} day${daysLeft>1?'s':''}.`);
+    }
+  }
+}
+
+// ── AUDIT DUE DATE REMINDERS ──
+// Sends email + in-app notification 3, 2, and 1 day(s) before due.
+async function checkAuditReminders(){
+  if(!currentUser||!isAdmin())return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const REMIND_DAYS=[3,2,1];
+  for(const s of auditSubs){
+    if(!s.dueDate||s.status==='accepted')continue;
+    const dueDate=new Date(s.dueDate+'T00:00:00');
+    const daysLeft=Math.round((dueDate-today)/86400000);
+    if(!REMIND_DAYS.includes(daysLeft))continue;
+    const assignee=s.assigneeId?members.find(m=>m.id===s.assigneeId):null;
+    const key=`tf_a_remind_${s.id}_${daysLeft}d_${today.toDateString()}`;
+    if(localStorage.getItem(key))continue;
+    localStorage.setItem(key,'1');
+    const parent=auditParents.find(p=>p.id===s.parentId);
+    const areaName=parent?parent.name:'Audit';
+    const msg=`"${areaName} — ${s.subTask}" is due in ${daysLeft} day${daysLeft>1?'s':''}`;
+    addNotification(`⏰ Audit Due Soon`,msg,null);
+    if(assignee){
+      await sendAuditEmail(s,assignee,areaName,
+        `⏰ Reminder: This audit task is due in ${daysLeft} day${daysLeft>1?'s':''}.`);
     }
   }
 }
@@ -4224,6 +4406,12 @@ window.saveCompliance=async function(){
       const assignee=members.find(m=>m.id===assigneeId);
       await sendComplianceEmail({...data,id:eid},assignee,'⚠️ This compliance item is now overdue.');
     }
+    // Email: task completed
+    if(newStatus==='completed'&&prevStatus!=='completed'&&assigneeId){
+      const assignee=members.find(m=>m.id===assigneeId);
+      await sendComplianceEmail({...data,id:eid},assignee,'✅ This compliance task has been marked as completed.');
+      // Also notify admin via CC (handled inside sendComplianceEmail)
+    }
   } else {
     const newId=uid();
     await set(ref(db,`compliance/${newId}`),{...data,id:newId});
@@ -4292,8 +4480,10 @@ window.switchAuditModule=function(mod){
   currentAuditModule=mod;
   document.getElementById('auditModuleInternal').classList.toggle('active',mod==='internal');
   document.getElementById('auditModuleStatutory').classList.toggle('active',mod==='statutory');
+  document.getElementById('auditModuleTax').classList.toggle('active',mod==='tax');
   document.getElementById('auditModuleInternal').style.color=mod==='internal'?'var(--accent)':'';
   document.getElementById('auditModuleStatutory').style.color=mod==='statutory'?'var(--accent)':'';
+  document.getElementById('auditModuleTax').style.color=mod==='tax'?'var(--accent)':'';
   renderAuditWork();
 };
 
@@ -4338,7 +4528,7 @@ window.renderAuditWork=function(){
   if(addBtn){
     // Show Add Area button for admins; also show if profile not yet loaded (will re-render once loaded)
     addBtn.style.display=(adm||!currentUserProfile)?'':'none';
-    addBtn.textContent=`＋ ${currentAuditModule==='statutory'?'Statutory':'Internal'} Area`;
+    addBtn.textContent=`＋ ${currentAuditModule==='statutory'?'Statutory':currentAuditModule==='tax'?'Tax Audit':'Internal'} Area`;
   }
   const addTaskBtn=document.getElementById('auditAddTaskBtn');
   if(addTaskBtn){
@@ -4352,10 +4542,13 @@ window.renderAuditWork=function(){
   // Update module tab counts
   const internalCount=auditParents.filter(p=>!p.module||p.module==='internal').length;
   const statutoryCount=auditParents.filter(p=>p.module==='statutory').length;
+  const taxCount=auditParents.filter(p=>p.module==='tax').length;
   const btnInt=document.getElementById('auditModuleInternal');
   const btnStat=document.getElementById('auditModuleStatutory');
+  const btnTax=document.getElementById('auditModuleTax');
   if(btnInt) btnInt.innerHTML=`🏢 Internal${internalCount?` <span style="background:var(--accent);color:#fff;border-radius:99px;padding:0 5px;font-size:.6rem;font-family:'JetBrains Mono',monospace">${internalCount}</span>`:''}`;
   if(btnStat) btnStat.innerHTML=`⚖️ Statutory${statutoryCount?` <span style="background:var(--green);color:#fff;border-radius:99px;padding:0 5px;font-size:.6rem;font-family:'JetBrains Mono',monospace">${statutoryCount}</span>`:''}`;
+  if(btnTax) btnTax.innerHTML=`🧾 Tax Audit${taxCount?` <span style="background:var(--amber);color:#fff;border-radius:99px;padding:0 5px;font-size:.6rem;font-family:'JetBrains Mono',monospace">${taxCount}</span>`:''}`;
 
   // Populate assignee filter
   const fSel=document.getElementById('auditFilterAssignee');
@@ -4383,7 +4576,8 @@ window.renderAuditWork=function(){
   const summaryBar=document.getElementById('auditSummaryBar');
   if(summaryBar){
     const isStatutory=currentAuditModule==='statutory';
-    const modBadge=`<span style="display:inline-flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid ${isStatutory?'var(--green-border)':'var(--blue-border)'};background:${isStatutory?'var(--green-bg)':'var(--blue-bg)'};color:${isStatutory?'var(--green)':'var(--blue)'};font-family:'JetBrains Mono',monospace">${isStatutory?'⚖️ Statutory':'🏢 Internal'}</span>`;
+    const isTax=currentAuditModule==='tax';
+    const modBadge=`<span style="display:inline-flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid ${isTax?'var(--amber-border)':isStatutory?'var(--green-border)':'var(--blue-border)'};background:${isTax?'var(--amber-bg)':isStatutory?'var(--green-bg)':'var(--blue-bg)'};color:${isTax?'var(--amber)':isStatutory?'var(--green)':'var(--blue)'};font-family:'JetBrains Mono',monospace">${isTax?'🧾 Tax Audit':isStatutory?'⚖️ Statutory':'🏢 Internal'}</span>`;
     const pills=Object.entries(AUDIT_STATUS).map(([k,v])=>{
       const cnt=byStatus[k]||0;
       if(!cnt) return '';
@@ -4580,11 +4774,12 @@ window.openAuditParentModal=function(pid){
   // Module badge
   const mod=p?.module||currentAuditModule;
   const isStatutory=mod==='statutory';
+  const isTax=mod==='tax';
   const badge=document.getElementById('aParentModuleBadge');
-  badge.style.background=isStatutory?'var(--green-bg)':'var(--blue-bg)';
-  badge.style.border=`1px solid ${isStatutory?'var(--green-border)':'var(--blue-border)'}`;
-  badge.style.color=isStatutory?'var(--green)':'var(--blue)';
-  badge.innerHTML=(isStatutory?'⚖️ Statutory Audit':'🏢 Internal Audit')+' Module';
+  badge.style.background=isTax?'var(--amber-bg)':isStatutory?'var(--green-bg)':'var(--blue-bg)';
+  badge.style.border=`1px solid ${isTax?'var(--amber-border)':isStatutory?'var(--green-border)':'var(--blue-border)'}`;
+  badge.style.color=isTax?'var(--amber)':isStatutory?'var(--green)':'var(--blue)';
+  badge.innerHTML=(isTax?'🧾 Tax Audit':isStatutory?'⚖️ Statutory Audit':'🏢 Internal Audit')+' Module';
   document.getElementById('auditParentModal').style.display='flex';
   setTimeout(()=>document.getElementById('aParentName').focus(),50);
 };
@@ -4625,14 +4820,15 @@ window.openAuditSubModal=function(parentId,sid){
   const parent=auditParents.find(p=>p.id===(parentId||s?.parentId));
   const mod=parent?.module||currentAuditModule||'internal';
   const isStatutory=mod==='statutory';
-  const auditorName=isStatutory?'Auditor':'Reviewer';
-  document.getElementById('aSubSubmittedLabel').textContent=isStatutory?'Submitted to Auditor On':'Submitted for Review On';
-  document.getElementById('aSubQueryLabel').textContent=isStatutory?'📝 Auditor Query / Observation':'📝 Review Query / Observation';
-  document.getElementById('aSubStatusShared').textContent=isStatutory?'📤 Shared with Auditor':'📤 Shared for Review';
-  document.getElementById('aSubStatusQuery').textContent=isStatutory?'❓ Query Raised by Auditor':'❓ Query Raised';
-  document.getElementById('aSubStatusAccepted').textContent=isStatutory?'✅ Accepted by Auditor':'✅ Accepted';
-  document.getElementById('aSubAuditQuery').placeholder=isStatutory?'Paste auditor\'s query or observation here…':'Paste review query or observation here…';
-  document.getElementById('aSubReviewerLabel').textContent=isStatutory?'External Auditor':'Internal Reviewer';
+  const isTax=mod==='tax';
+  const auditorName=isStatutory?'Auditor':isTax?'Tax Auditor':'Reviewer';
+  document.getElementById('aSubSubmittedLabel').textContent=isStatutory?'Submitted to Auditor On':isTax?'Submitted to Tax Auditor On':'Submitted for Review On';
+  document.getElementById('aSubQueryLabel').textContent=isStatutory?'📝 Auditor Query / Observation':isTax?'📝 Tax Auditor Query / Observation':'📝 Review Query / Observation';
+  document.getElementById('aSubStatusShared').textContent=isStatutory?'📤 Shared with Auditor':isTax?'📤 Shared with Tax Auditor':'📤 Shared for Review';
+  document.getElementById('aSubStatusQuery').textContent=isStatutory?'❓ Query Raised by Auditor':isTax?'❓ Query Raised by Tax Auditor':'❓ Query Raised';
+  document.getElementById('aSubStatusAccepted').textContent=isStatutory?'✅ Accepted by Auditor':isTax?'✅ Accepted by Tax Auditor':'✅ Accepted';
+  document.getElementById('aSubAuditQuery').placeholder=isStatutory?'Paste auditor\'s query or observation here…':isTax?'Paste tax auditor\'s query or observation here…':'Paste review query or observation here…';
+  document.getElementById('aSubReviewerLabel').textContent=isStatutory?'External Auditor':isTax?'Tax Auditor':'Internal Reviewer';
   document.getElementById('aSubDept').value=s?.dept||'';
   document.getElementById('aSubPriority').value=s?.priority||'medium';
   document.getElementById('aSubDueDate').value=s?.dueDate||'';
@@ -4706,16 +4902,19 @@ window.saveAuditSub=async function(){
     parentId=sel?sel.value:'';
   }
   if(!parentId){alert('Please select an audit area!');return;}
+  const assigneeId=document.getElementById('aSubAssignee').value||null;
+  const reviewerId=document.getElementById('aSubReviewer').value||null;
+  const newStatus=document.getElementById('aSubStatus').value||'not_started';
   const data={
     parentId,
     subTask,
     dept:document.getElementById('aSubDept').value||'',
     priority:document.getElementById('aSubPriority').value||'medium',
-    assigneeId:document.getElementById('aSubAssignee').value||null,
-    reviewerId:document.getElementById('aSubReviewer').value||null,
+    assigneeId,
+    reviewerId,
     dueDate:document.getElementById('aSubDueDate').value||null,
     submittedOn:document.getElementById('aSubSubmittedOn').value||null,
-    status:document.getElementById('aSubStatus').value||'not_started',
+    status:newStatus,
     folderLink:document.getElementById('aSubFolderLink').value.trim()||null,
     auditQuery:document.getElementById('aSubAuditQuery').value.trim()||'',
     response:document.getElementById('aSubResponse').value.trim()||'',
@@ -4725,14 +4924,39 @@ window.saveAuditSub=async function(){
     order:eid?(auditSubs.find(x=>x.id===eid)?.order??Date.now()):auditSubs.filter(s=>s.parentId===parentId).length*100,
     createdBy:currentUser?.uid||null
   };
+  const parent=auditParents.find(p=>p.id===parentId);
+  const parentName=parent?parent.name:'Audit';
   if(eid){
+    const prev=auditSubs.find(x=>x.id===eid);
+    const prevAssigneeId=prev?.assigneeId||null;
+    const prevStatus=prev?.status||'not_started';
     await update(ref(db,`auditWork/subTasks/${eid}`),data);
+    // Email: assignee changed
+    if(assigneeId&&assigneeId!==prevAssigneeId){
+      const assignee=members.find(m=>m.id===assigneeId);
+      if(assignee) await sendAuditEmail({...data,id:eid},assignee,parentName,'You have been assigned an audit task.');
+    }
+    // Email: task completed (accepted)
+    if(newStatus==='accepted'&&prevStatus!=='accepted'&&assigneeId){
+      const assignee=members.find(m=>m.id===assigneeId);
+      if(assignee) await sendAuditEmail({...data,id:eid},assignee,parentName,'✅ Your audit task has been accepted/completed.');
+    }
+    // Email: query raised
+    if(newStatus==='query_raised'&&prevStatus!=='query_raised'&&assigneeId){
+      const assignee=members.find(m=>m.id===assigneeId);
+      if(assignee) await sendAuditEmail({...data,id:eid},assignee,parentName,'❓ A query has been raised on your audit task.');
+    }
     toast('✅ Audit item updated!');
   } else {
     const newId=uid();
     await set(ref(db,`auditWork/subTasks/${newId}`),{...data,id:newId});
     auditCollapsed[parentId]=false;
     localStorage.setItem('audit_collapsed',JSON.stringify(auditCollapsed));
+    // Email: new audit task assigned
+    if(assigneeId){
+      const assignee=members.find(m=>m.id===assigneeId);
+      if(assignee) await sendAuditEmail({...data,id:newId},assignee,parentName,'A new audit task has been assigned to you.');
+    }
     toast('✅ Audit item added!');
   }
   closeAuditSubModal();
@@ -5300,7 +5524,7 @@ setInterval(()=>{
 const savedEmail=localStorage.getItem('tf_email');/* Google Apps Script - no init needed */
 // Auto-init portal toggle UI to 'member' on load
 selectPortal('member');
-window.openEmailConfig=openEmailConfig;
+// openEmailConfig already set up with digest auto-check wrapper
 
 // Request notification permission on app load
 setTimeout(requestNotificationPermission, 2000);
@@ -5308,12 +5532,16 @@ setTimeout(requestNotificationPermission, 2000);
 setTimeout(()=>{renderNotifBadge();renderNotifList();checkOverdueNotifs();},3000);
 // Compliance due date reminders — run after data loads (5s delay) then every hour
 setTimeout(()=>checkComplianceReminders(),5000);
+// Audit due date reminders — run after data loads (6s delay) then every hour
+setTimeout(()=>checkAuditReminders(),6000);
 // Auto-switch to compliance view if opened via #compliance link
 if(location.hash==='#compliance'){setTimeout(()=>switchView('compliance'),500);}
 // Check overdue every hour
 setInterval(checkOverdueNotifs,3600000);
 // Check compliance reminders every hour
 setInterval(checkComplianceReminders,3600000);
+// Check audit reminders every hour
+setInterval(checkAuditReminders,3600000);
 
 // ── TASKBOARD UI REDESIGN ──
 (function injectTaskboardStyles(){
