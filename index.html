@@ -553,7 +553,7 @@ select option{background:var(--white);color:var(--ink)}
 
 
 /* ══ AUDIT WORK — ULTRA COMPACT TREE TABLE ══ */
-#auditTable{border-collapse:collapse;width:100%;table-layout:fixed}
+#auditTable{border-collapse:collapse;width:100%;table-layout:auto}
 /* ── AUDIT TABLE FROZEN HEADER — single authoritative rule ── */
 #auditTable thead th{
   position:sticky;
@@ -596,7 +596,7 @@ select option{background:var(--white);color:var(--ink)}
 .a-sub-row:hover{background:var(--bg)}
 .a-sub-done{opacity:.5}
 .a-sub-name-cell{padding:10px 8px 10px 0;max-width:none;overflow:hidden}
-.a-sub-name{font-size:.84rem;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:320px}
+.a-sub-name{font-size:.84rem;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:450px}
 .a-strikethrough{text-decoration:line-through;color:var(--ink-dim)!important}
 .a-sub-td{padding:10px 8px;font-size:.78rem;vertical-align:middle}
 .a-check-td{text-align:center;width:52px}
@@ -960,6 +960,9 @@ select option{background:var(--white);color:var(--ink)}
         </button>
         <button class="lp-filter-item" onclick="openGmailPanel()" style="color:#ea4335">
           <span style="font-size:.8rem">✉️</span>Gmail Tasks
+        </button>
+        <button class="lp-filter-item" onclick="downloadFolderSetup()" style="color:var(--purple)" title="Download setup to open local Google Drive folders directly from audit tasks">
+          <span style="font-size:.8rem">📂</span>Folder Setup
         </button>
       </div>
     </aside>
@@ -1437,23 +1440,22 @@ select option{background:var(--white);color:var(--ink)}
           <!-- SCROLLABLE CONTENT -->
           <div class="c-content-scroll">
             <div style="background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:auto;flex:1;min-height:200px">
-              <table id="auditTable" style="width:100%;min-width:0;border-collapse:collapse;table-layout:fixed">
-                <thead>
+              <table id="auditTable" style="width:100%;min-width:0;border-collapse:collapse;table-layout:auto">
+                <thead id="auditTableHead">
                   <tr>
-                    <th style="width:12px;background:rgba(100,116,139,.04)"></th>
-                    <th style="color:#0F766E;background:rgba(15,118,110,.06)">Area / Document Request</th>
-                    <th style="width:65px;color:#6D28D9;background:rgba(109,40,217,.06)">Dept</th>
-                    <th style="width:105px;color:#0369A1;background:rgba(3,105,161,.06)">Assignee</th>
-                    <th style="width:105px;color:#1D4ED8;background:rgba(29,78,216,.06)">Reviewer</th>
-                    <th style="width:68px;color:#B45309;background:rgba(180,83,9,.06)">Due</th>
-                    <th style="width:110px;color:#BE185D;background:rgba(190,24,93,.06)">Status</th>
-                    <th style="width:60px;color:#B91C1C;background:rgba(185,28,28,.06)">Priority</th>
-                    <th style="width:80px;color:#0F766E;background:rgba(15,118,110,.05);padding-left:12px">Folder</th>
-                    <th style="width:52px;background:rgba(100,116,139,.04)"></th>
+                    <th style="width:14px;background:rgba(100,116,139,.04)"></th>
+                    <th style="min-width:280px;color:#0F766E;background:rgba(15,118,110,.06)">Area / Document Request</th>
+                    <th style="width:90px;color:#6D28D9;background:rgba(109,40,217,.06)">Dept</th>
+                    <th style="width:140px;color:#0369A1;background:rgba(3,105,161,.06)">Assignee</th>
+                    <th style="width:90px;color:#B45309;background:rgba(180,83,9,.06)">Due</th>
+                    <th style="width:150px;color:#BE185D;background:rgba(190,24,93,.06)">Status</th>
+                    <th style="width:80px;color:#B91C1C;background:rgba(185,28,28,.06)">Priority</th>
+                    <th style="width:90px;color:#0F766E;background:rgba(15,118,110,.05);padding-left:12px">Folder</th>
+                    <th style="width:60px;background:rgba(100,116,139,.04)"></th>
                   </tr>
                 </thead>
                 <tbody id="auditTableBody">
-                  <tr><td colspan="10">
+                  <tr><td colspan="9">
                     <div class="compliance-empty">
                       <div class="compliance-empty-icon">📋</div>
                       <div class="compliance-empty-title">No audit items yet</div>
@@ -1578,7 +1580,15 @@ select option{background:var(--white);color:var(--ink)}
             </div>
             <div class="fg">
               <label>🔗 Folder / Document Link</label>
-              <input class="input" type="url" id="aSubFolderLink" placeholder="https://drive.google.com/…">
+              <div style="display:flex;gap:6px;align-items:center">
+                <select id="aSubDrivePrefix" class="input" style="width:auto;min-width:70px;font-size:.78rem;padding:8px 28px 8px 8px" onchange="applyDrivePrefix()">
+                  <option value="">—</option>
+                  <option value="G:\My Drive\">G: Drive</option>
+                  <option value="H:\My Drive\">H: Drive</option>
+                </select>
+                <input class="input" type="text" id="aSubFolderLink" placeholder="G:\My Drive\Finance\Payroll  or  https://drive.google.com/…" style="flex:1">
+              </div>
+              <div style="font-size:.65rem;color:var(--ink-dim);margin-top:3px">Paste a local Google Drive path (e.g. <code style="background:var(--bg2);padding:1px 4px;border-radius:3px">G:\My Drive\Finance</code>) or a web URL</div>
             </div>
             <div class="fg">
               <label id="aSubQueryLabel">📝 Query / Observation</label>
@@ -4600,7 +4610,7 @@ window.renderAuditWork=function(){
   });
 
   if(!visibleParents.length){
-    tbody.innerHTML=`<tr><td colspan="10"><div class="compliance-empty"><div class="compliance-empty-icon">📋</div><div class="compliance-empty-title">No items found</div><div class="compliance-empty-sub">Try clearing filters or add a new audit area.</div></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="9"><div class="compliance-empty"><div class="compliance-empty-icon">📋</div><div class="compliance-empty-title">No items found</div><div class="compliance-empty-sub">Try clearing filters or add a new audit area.</div></div></td></tr>`;
     return;
   }
 
@@ -4632,7 +4642,7 @@ window.renderAuditWork=function(){
       ondragend="auditDragEnd(event)"
       id="ap_${p.id}">
       <td class="a-drag-handle">⠿</td>
-      <td class="a-par-cell" colspan="9">
+      <td class="a-par-cell" colspan="7">
         <div style="display:flex;align-items:center;gap:8px">
           <button class="a-tog-btn" onclick="toggleAuditParent('${p.id}')">${collapsed?'▶':'▼'}</button>
           <span class="a-par-name">${esc(p.name)}</span>
@@ -4647,7 +4657,7 @@ window.renderAuditWork=function(){
           </div>`:''}
         </div>
       </td>
-      <td class="a-par-done-cell" colspan="2">
+      <td class="a-par-done-cell">
         <div class="a-acts">
           ${isAdmin()?`
           <button class="btn-icon btn-xs" title="Edit Area" onclick="openAuditParentModal('${p.id}')">✏</button>
@@ -4658,11 +4668,10 @@ window.renderAuditWork=function(){
 
     if(!collapsed){
       if(!subs.length){
-        rows+=`<tr class="a-empty-row"><td></td><td colspan="10"><span>No items${fStatus||fDept||fPri?` matching filters`:''}${isAdmin()?' — click ＋ to add':''}</span></td></tr>`;
+        rows+=`<tr class="a-empty-row"><td></td><td colspan="8"><span>No items${fStatus||fDept||fPri?` matching filters`:''}${isAdmin()?' — click ＋ to add':''}</span></td></tr>`;
       } else {
         subs.forEach((s,si)=>{
           const assignee=members.find(m=>m.id===s.assigneeId);
-          const reviewer=members.find(m=>m.id===s.reviewerId);
           const st=AUDIT_STATUS[s.status||'not_started'];
           const pr=AUDIT_PRIORITY[s.priority||'medium'];
           const isOD=s.dueDate&&s.dueDate<today&&s.status!=='accepted';
@@ -4686,18 +4695,19 @@ window.renderAuditWork=function(){
                 </div>
               </div>
             </td>
-            <td class="a-sub-td" style="font-size:.72rem;color:var(--ink-mid)">${s.dept?esc(s.dept):'-'}</td>
-            <td class="a-sub-td">${assignee?`<div style="display:flex;align-items:center;gap:4px">${av(assignee,18)}<span style="font-size:.75rem">${esc(assignee.name)}</span></div>`:`<span class="a-dim">—</span>`}</td>
-            <td class="a-sub-td">${reviewer?`<div style="display:flex;align-items:center;gap:4px">${av(reviewer,18)}<span style="font-size:.75rem">${esc(reviewer.name)}</span></div>`:`<span class="a-dim">—</span>`}</td>
-            <td class="a-sub-td" style="${isOD?'color:var(--red);font-weight:700':'color:var(--ink-mid)'};font-family:'JetBrains Mono',monospace;font-size:.7rem">${isOD?'🔴 ':''}${dueDisplay}</td>
-            <td class="a-sub-td">
-              <span style="display:inline-flex;align-items:center;gap:3px;font-size:.67rem;font-weight:700;padding:2px 7px;border-radius:99px;border:1px solid ${st.border};background:${st.bg};color:${st.color};white-space:nowrap;cursor:pointer" onclick="cycleAuditStatus('${s.id}','${s.status||'not_started'}')">${st.icon} ${st.label}</span>
+            <td class="a-sub-td" style="font-size:.74rem;color:var(--ink-mid)">${s.dept?esc(s.dept):'-'}</td>
+            <td class="a-sub-td">${assignee?`<div style="display:flex;align-items:center;gap:5px">${av(assignee,20)}<span style="font-size:.78rem">${esc(assignee.name)}</span></div>`:`<span class="a-dim">—</span>`}</td>
+            <td class="a-sub-td" style="${isOD?'color:var(--red);font-weight:700':'color:var(--ink-mid)'};font-family:'JetBrains Mono',monospace;font-size:.72rem">${isOD?'🔴 ':''}${dueDisplay}</td>
+            <td class="a-sub-td" onclick="event.stopPropagation()">
+              <select class="input" style="font-size:.72rem;padding:4px 24px 4px 6px;border-radius:6px;border:1.5px solid ${st.border};background:${st.bg};color:${st.color};font-weight:700;cursor:pointer;min-width:120px" onchange="quickAuditStatus('${s.id}',this.value)">
+                ${Object.entries(AUDIT_STATUS).map(([k,v])=>`<option value="${k}" ${(s.status||'not_started')===k?'selected':''}>${v.icon} ${v.label}</option>`).join('')}
+              </select>
             </td>
             <td class="a-sub-td">
               <span style="display:inline-flex;align-items:center;gap:3px;font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:99px;border:1px solid ${pr.border};background:${pr.bg};color:${pr.color}">${pr.icon}</span>
             </td>
             <td class="a-sub-td" onclick="event.stopPropagation()">
-              ${s.folderLink?`<a href="${esc(s.folderLink)}" target="_blank" rel="noopener" class="a-folder-btn">📂 Open</a>`:`<span class="a-dim">—</span>`}
+              ${s.folderLink?(isLocalPath(s.folderLink)?`<a href="openfolder:///${s.folderLink.replace(/\\/g,'/')}" class="a-folder-btn" title="${esc(s.folderLink)}">📂 Open</a>`:`<a href="${esc(s.folderLink)}" target="_blank" rel="noopener" class="a-folder-btn">📂 Open</a>`):`<span class="a-dim">—</span>`}
             </td>
             <td class="a-act-cell" onclick="event.stopPropagation()">
               <div class="a-acts">
@@ -4719,6 +4729,110 @@ window.cycleAuditStatus=async function(sid,current){
   const next=order[(order.indexOf(current)+1)%order.length];
   await update(ref(db,`auditWork/subTasks/${sid}`),{status:next,updatedAt:Date.now()});
   toast(`${AUDIT_STATUS[next].icon} ${AUDIT_STATUS[next].label}`);
+};
+
+/* ── Local path helpers for Google Drive ── */
+window.isLocalPath=function(path){
+  if(!path) return false;
+  return /^[A-Za-z]:\\/.test(path) || path.startsWith('\\\\');
+};
+
+// Convert Windows path to file:// URL
+window.pathToFileUrl=function(path){
+  return 'file:///' + path.replace(/\\/g, '/');
+};
+
+// Open local folder in Windows File Explorer via openfolder:// protocol
+window.openLocalFolder=function(path){
+  if(!path) return;
+  window.location.href = 'openfolder:///' + path.replace(/\\/g, '/');
+};
+
+// Generate and download the Windows setup script (run once)
+window.downloadFolderSetup=function(){
+  const bat=`@echo off
+echo ============================================
+echo   Ginesysone Finance - Folder Opener Setup
+echo ============================================
+echo.
+echo This will let you open local folders directly
+echo from the Task Board with one click.
+echo.
+echo Creating handler script...
+
+:: Create VBS handler in user profile
+(
+echo Set a = WScript.Arguments
+echo If a.Count ^> 0 Then
+echo   p = a(0^)
+echo   p = Replace(p, "openfolder://", ""^)
+echo   p = Replace(p, "%%%%20", " "^)
+echo   If Left(p,1^) = """" Then p = Mid(p,2^)
+echo   If Right(p,1^) = """" Then p = Left(p,Len(p^)-1^)
+echo   If Right(p,1^) = "/" Then p = Left(p,Len(p^)-1^)
+echo   CreateObject("WScript.Shell"^).Run "explorer.exe """ ^& p ^& """"
+echo End If
+) > "%USERPROFILE%\\openfolder.vbs"
+
+:: Register protocol (HKCU - no admin needed)
+reg add "HKCU\\Software\\Classes\\openfolder" /ve /d "URL:Open Folder Protocol" /f >nul 2>&1
+reg add "HKCU\\Software\\Classes\\openfolder" /v "URL Protocol" /d "" /f >nul 2>&1
+reg add "HKCU\\Software\\Classes\\openfolder\\shell\\open\\command" /ve /d "wscript.exe \\"%%USERPROFILE%%\\openfolder.vbs\\" \\"%%1\\"" /f >nul 2>&1
+
+echo.
+echo ✅ Done! Close this window and refresh the Task Board.
+echo    Folder links will now open directly in File Explorer.
+echo.
+pause`;
+  const blob=new Blob([bat],{type:'application/bat'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='setup_folder_opener.bat';a.click();
+  URL.revokeObjectURL(url);
+  // Mark setup as pending (user needs to run the file first)
+  const t=document.createElement('div');t.className='toast';
+  t.innerHTML=`📥 Downloaded! Right-click the file → <strong>Run as Administrator</strong>
+    <button class="toast-undo" onclick="confirmFolderSetup();this.parentElement.remove()" style="margin-left:8px">✅ I've run it</button>`;
+  document.getElementById('toastWrap').appendChild(t);
+  setTimeout(()=>t.remove(),15000);
+};
+
+// Mark protocol as working (called after successful open)
+window.confirmFolderSetup=function(){
+  localStorage.setItem('gf_openfolder_setup','1');
+  toast('✅ Direct folder open is now active!');
+};
+
+window.applyDrivePrefix=function(){
+  const sel=document.getElementById('aSubDrivePrefix');
+  const input=document.getElementById('aSubFolderLink');
+  if(!sel||!input) return;
+  const prefix=sel.value;
+  if(!prefix) return;
+  const current=input.value.trim();
+  if(!current){
+    input.value=prefix;
+    input.focus();
+  } else if(!/^[A-Za-z]:\\/.test(current) && !current.startsWith('http')){
+    input.value=prefix+current;
+  }
+  sel.value='';
+};
+
+/* ── Status dropdown quick change ── */
+window.quickAuditStatus=async function(sid,newStatus){
+  const st=AUDIT_STATUS[newStatus];
+  if(!st) return;
+  await update(ref(db,`auditWork/subTasks/${sid}`),{status:newStatus,updatedAt:Date.now()});
+  toast(`${st.icon} ${st.label}`);
+  const s=auditSubs.find(x=>x.id===sid);
+  if(s&&s.assigneeId){
+    const assignee=members.find(m=>m.id===s.assigneeId);
+    const parent=auditParents.find(p=>p.id===s.parentId);
+    const areaName=parent?parent.name:'Audit';
+    if(newStatus==='accepted'&&assignee) await sendAuditEmail({...s,status:newStatus},assignee,areaName,'✅ Your audit task has been accepted/completed.');
+    if(newStatus==='query_raised'&&assignee) await sendAuditEmail({...s,status:newStatus},assignee,areaName,'❓ A query has been raised on your audit task.');
+  }
 };
 
 /* ── Query detail panel ── */
