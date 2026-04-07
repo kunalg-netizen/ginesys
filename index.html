@@ -834,7 +834,7 @@ select option{background:var(--white);color:var(--ink)}
         <span id="userName"></span>
         <span class="role-badge" id="userRoleBadge"></span>
       </div>
-      <button id="claimAdminBtn" onclick="claimAdminRole()" title="Promote your account to Admin" style="display:none;margin-left:4px;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:.75rem;font-weight:700;cursor:pointer;animation:pulse 1.5s infinite">⚡ Claim Admin</button>
+      <!-- Admin role managed by existing admins only (no self-claim) -->
       <div class="sync-label"><span class="sync-dot"></span> Live</div>
       <div class="h-divider"></div>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
@@ -2394,7 +2394,7 @@ window.doLogin=async function(){
     if(!profile){
       const autoName=cred.user.displayName||email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase())||'User';
       const autoColor=['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#3b82f6','#10b981'][Math.floor(Math.random()*7)];
-      const role=selectedPortalRole||'member';
+      const role='member'; // Always member — admin must promote
       try{
         await set(ref(db,`members/${cred.user.uid}`),{name:autoName,email,role,color:autoColor,createdAt:Date.now()});
         // Profile created — auth state change will load the app normally
@@ -2418,7 +2418,7 @@ window.doLogin=async function(){
 };
 window.doRegister=async function(){
   const name=document.getElementById('regName').value.trim();const email=document.getElementById('regEmail').value.trim();
-  const pw=document.getElementById('regPassword').value;const role=selectedPortalRole;
+  const pw=document.getElementById('regPassword').value;const role='member'; // Always register as member — admin must promote
   const err=document.getElementById('authErr');if(!name||!email||!pw){err.textContent='Fill all fields.';err.style.display='block';return;}
   try{
     const cred=await createUserWithEmailAndPassword(auth,email,pw);
@@ -2607,9 +2607,6 @@ function updateUserHeader(){
   document.getElementById('userAvatar').innerHTML=av(m,22);
   document.getElementById('userName').textContent=m.name.split(' ')[0];
   const rb=document.getElementById('userRoleBadge');rb.textContent=m.role==='admin'?'Admin':'Member';rb.className='role-badge '+(m.role==='admin'?'role-admin':'role-member');
-  // Show "Claim Admin" button if this user is not yet an admin
-  const cab=document.getElementById('claimAdminBtn');
-  if(cab)cab.style.display=(m.role!=='admin')?'inline-block':'none';
   const isAdm=m.role==='admin';
   const _tfs=document.getElementById('teamFilterSection');if(_tfs)_tfs.style.display=isAdm?'':'none';
   const navReport=document.getElementById('nav_report');
@@ -3567,7 +3564,26 @@ function renderActivity(){
 function renderTeam(){
   if(currentView!=='team')return;const grid=document.getElementById('teamGrid');
   if(!members.length){grid.innerHTML='<p style="color:var(--ink-dim);font-size:.83rem">No members yet.</p>';return;}
-  grid.innerHTML=members.map(m=>{const open=tasks.filter(t=>t.assigneeId===m.id&&t.status!=='done'&&!t.archived).length;const total=tasks.filter(t=>t.assigneeId===m.id&&!t.archived).length;const time=tasks.filter(t=>t.assigneeId===m.id).reduce((a,t)=>a+(t.timeLogged||0),0);return`<div class="mc">${av(m,44)}<div style="flex:1"><div class="mn">${esc(m.name)}<span class="role-badge ${m.role==='admin'?'role-admin':'role-member'}">${m.role}</span></div><div class="me">${esc(m.email)}</div><div class="ms2">${open} open · ${total} total · ${fmtTime(time)} logged</div></div><button class="btn btn-ghost btn-sm" onclick="switchView('tasks');tf('assignee','${m.id}')">View</button></div>`;}).join('');
+  const adm=isAdmin();
+  const myId=currentUser?.uid;
+  grid.innerHTML=members.map(m=>{
+    const open=tasks.filter(t=>t.assigneeId===m.id&&t.status!=='done'&&!t.archived).length;
+    const total=tasks.filter(t=>t.assigneeId===m.id&&!t.archived).length;
+    const time=tasks.filter(t=>t.assigneeId===m.id).reduce((a,t)=>a+(t.timeLogged||0),0);
+    const isSelf=m.id===myId;
+    const isThisAdmin=m.role==='admin';
+    // Role action buttons (admin only, can't demote yourself)
+    let roleActions='';
+    if(adm&&!isSelf){
+      if(isThisAdmin){
+        roleActions=`<button class="btn btn-ghost btn-xs" onclick="demoteMember('${m.id}','${esc(m.name)}')" style="color:var(--amber);border-color:var(--amber-border)" title="Remove admin access">⬇ Demote</button>`;
+      } else {
+        roleActions=`<button class="btn btn-ghost btn-xs" onclick="promoteMember('${m.id}','${esc(m.name)}')" style="color:var(--accent);border-color:var(--accent-mid)" title="Make admin">⬆ Promote</button>`;
+      }
+      roleActions+=`<button class="btn btn-ghost btn-xs" onclick="removeMember('${m.id}','${esc(m.name)}')" style="color:var(--red);border-color:var(--red-border)" title="Remove from team">🗑</button>`;
+    }
+    return`<div class="mc">${av(m,44)}<div style="flex:1"><div class="mn">${esc(m.name)}<span class="role-badge ${isThisAdmin?'role-admin':'role-member'}">${m.role}${isSelf?' (you)':''}</span></div><div class="me">${esc(m.email)}</div><div class="ms2">${open} open · ${total} total · ${fmtTime(time)} logged</div></div><div style="display:flex;gap:4px;align-items:center"><button class="btn btn-ghost btn-sm" onclick="switchView('tasks');tf('assignee','${m.id}')">View</button>${roleActions}</div></div>`;
+  }).join('');
 }
 
 // ── REPORT ──
@@ -5854,27 +5870,50 @@ window.doSyncMembers=async function(){
   toast('\u2705 '+added+' member(s) added'+(skipped?' \u00b7 '+skipped+' already existed':''));
 };
 
-// ── CLAIM ADMIN ROLE ──
-window.claimAdminRole = async function(){
-  if(!currentUserProfile || !currentUser){toast('Not logged in.');return;}
-  if(currentUserProfile.role==='admin'){toast('You are already an Admin!');return;}
-  const confirmed = confirm(
-    'Promote your account to Admin?\n\nThis gives you full access to create tasks, manage compliance, view reports, and manage your team.\n\nClick OK to confirm.'
-  );
-  if(!confirmed)return;
+// ── ROLE MANAGEMENT (admin only) ──
+window.promoteMember=async function(uid,name){
+  if(!isAdmin()){toast('Only admins can promote members.');return;}
+  if(uid===currentUser?.uid){toast('You cannot change your own role.');return;}
+  if(!confirm(`Promote "${name}" to Admin?\n\nThis gives them full access to create tasks, manage compliance, audit, and team members.`))return;
   try{
-    const btn=document.getElementById('claimAdminBtn');
-    if(btn){btn.textContent='Updating…';btn.disabled=true;}
-    await update(ref(db,'members/'+currentUser.uid),{role:'admin'});
-    toast('\u2705 You are now an Admin! Reloading…');
-    setTimeout(()=>location.reload(),1500);
-  }catch(e){
-    console.error('claimAdminRole error:',e);
-    toast('Error updating role: '+e.message);
-    const btn=document.getElementById('claimAdminBtn');
-    if(btn){btn.textContent='\u26a1 Claim Admin';btn.disabled=false;}
-  }
+    await update(ref(db,'members/'+uid),{role:'admin'});
+    toast(`✅ ${name} is now an Admin!`);
+  }catch(e){toast('Error: '+e.message);}
 };
+
+window.demoteMember=async function(uid,name){
+  if(!isAdmin()){toast('Only admins can demote members.');return;}
+  if(uid===currentUser?.uid){toast('You cannot demote yourself.');return;}
+  if(!confirm(`Demote "${name}" to Member?\n\nThey will lose admin access: cannot create tasks, manage compliance/audit, or manage team.`))return;
+  try{
+    await update(ref(db,'members/'+uid),{role:'member'});
+    toast(`✅ ${name} is now a Member.`);
+  }catch(e){toast('Error: '+e.message);}
+};
+
+window.removeMember=async function(uid,name){
+  if(!isAdmin()){toast('Only admins can remove members.');return;}
+  if(uid===currentUser?.uid){toast('You cannot remove yourself.');return;}
+  // Check if member has active tasks
+  const activeTasks=tasks.filter(t=>t.assigneeId===uid&&t.status!=='done'&&!t.archived).length;
+  const msg=activeTasks>0
+    ?`Remove "${name}" from the team?\n\n⚠ They have ${activeTasks} active task(s). These tasks will become unassigned.\n\nThis only removes their profile — their login account still exists.`
+    :`Remove "${name}" from the team?\n\nThis only removes their profile — their login account still exists.`;
+  if(!confirm(msg))return;
+  try{
+    // Unassign their tasks
+    const memberTasks=tasks.filter(t=>t.assigneeId===uid);
+    for(const t of memberTasks){
+      await update(ref(db,`tasks/${t.id}`),{assigneeId:null,assigneeName:null});
+    }
+    // Remove member profile
+    await remove(ref(db,'members/'+uid));
+    toast(`🗑 ${name} removed from team.`);
+  }catch(e){toast('Error: '+e.message);}
+};
+
+// Legacy: disable self-claim (button removed from UI)
+window.claimAdminRole = function(){ toast('Admin role can only be assigned by an existing admin from the Team page.'); };
 
 
 </script>
