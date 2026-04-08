@@ -454,6 +454,35 @@ select option{background:var(--white);color:var(--ink)}
 .c-recur-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
 .recur-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:.67rem;font-weight:700;font-family:"JetBrains Mono",monospace;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-mid)}
 
+/* ═══ AUDIT PROCESS STEPS ═══ */
+.a-steps-row td{padding:0!important;background:var(--surface2)!important;border-bottom:1px solid var(--border)!important}
+.a-steps-wrap{padding:6px 12px 8px 36px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.a-steps-title{font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.a-step-item{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;background:var(--white);border:1px solid var(--border);border-radius:6px;transition:all .14s;cursor:default;width:fit-content;min-width:120px}
+.a-step-item:hover{border-color:var(--accent-mid);box-shadow:var(--shadow-xs)}
+.a-step-item.done{background:var(--green-bg);border-color:var(--green-border);opacity:.85}
+.a-step-item input[type=checkbox]{accent-color:var(--green);cursor:pointer;flex-shrink:0;width:14px;height:14px}
+.a-step-label{font-size:.8rem;flex:1;color:var(--ink);font-weight:500}
+.a-step-label.done{text-decoration:line-through;color:var(--ink-dim);font-weight:400}
+.a-step-done-by{font-size:.63rem;color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:600}
+.a-step-del{border:none;background:none;cursor:pointer;color:var(--ink-dim);font-size:.68rem;padding:2px 5px;border-radius:4px;transition:all .12s;opacity:0}
+.a-step-item:hover .a-step-del{opacity:1}
+.a-step-del:hover{background:var(--red-bg);color:var(--red)}
+.a-steps-add{display:flex;gap:6px;margin-top:4px;align-items:center}
+.a-steps-input{flex:1;padding:5px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.79rem;color:var(--ink);outline:none;background:var(--white);max-width:260px}
+.a-steps-input:focus{border-color:var(--accent)}
+.a-steps-badge{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;font-weight:700;font-family:'JetBrains Mono',monospace;padding:1px 7px;border-radius:99px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--ink-mid);transition:all .13s}
+.a-steps-badge:hover{border-color:var(--accent-mid);background:var(--accent-light);color:var(--accent)}
+.a-steps-badge.all-done{border-color:var(--green-border);background:var(--green-bg);color:var(--green)}
+/* modal steps */
+.modal-step-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;transition:all .14s}
+.modal-step-item:hover{border-color:var(--border2)}
+.modal-step-label{font-size:.82rem;flex:1;color:var(--ink)}
+.modal-step-del{border:none;background:none;cursor:pointer;color:var(--ink-dim);font-size:.72rem;padding:2px 5px;border-radius:4px;transition:all .12s}
+.modal-step-del:hover{background:var(--red-bg);color:var(--red)}
+.a-step-suggestion{padding:3px 8px;border:1.5px dashed var(--border2);border-radius:99px;background:none;font-size:.71rem;color:var(--ink-mid);cursor:pointer;font-family:'Figtree',sans-serif;transition:all .13s}
+.a-step-suggestion:hover{border-color:var(--accent-mid);background:var(--accent-light);color:var(--accent)}
+
 .detail-panel-overlay{position:fixed;inset:0;background:rgba(15,22,35,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px}
 .detail-panel{width:100%;max-width:560px;max-height:90vh;background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);box-shadow:var(--shadow-xl);display:flex;flex-direction:column;overflow:hidden;animation:panelIn .22s cubic-bezier(.34,1.56,.64,1)}
 @keyframes panelIn{from{opacity:0;transform:scale(.94) translateY(12px)}to{opacity:1;transform:none}}
@@ -594,10 +623,10 @@ select option{background:var(--white);color:var(--ink)}
 /* sub rows */
 .a-sub-row{border-bottom:1px solid var(--border);background:var(--white);transition:background .1s}
 .a-sub-row:hover{background:var(--bg)}
-.a-sub-done{opacity:.5}
+.a-sub-done{background:var(--green-bg)!important;border-left:3px solid var(--green)!important}
 .a-sub-name-cell{padding:10px 8px 10px 0;max-width:none;overflow:hidden}
 .a-sub-name{font-size:.84rem;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:450px}
-.a-strikethrough{text-decoration:line-through;color:var(--ink-dim)!important}
+.a-strikethrough{color:var(--ink)!important}
 .a-sub-td{padding:10px 8px;font-size:.78rem;vertical-align:middle}
 .a-check-td{text-align:center;width:52px}
 .a-chk{width:14px;height:14px;accent-color:var(--green);cursor:pointer;vertical-align:middle}
@@ -1376,12 +1405,8 @@ select option{background:var(--white);color:var(--ink)}
                   <select class="input ct-filter-input" id="auditFilterStatus" onchange="renderAuditWork()" style="width:100%">
                     <option value="">All Status</option>
                     <option value="not_started">Not Started</option>
-                    <option value="gathering">Gathering</option>
-                    <option value="ready">Ready</option>
-                    <option value="shared">Shared</option>
-                    <option value="query_raised">Query Raised</option>
-                    <option value="replied">Replied</option>
-                    <option value="accepted">Accepted</option>
+                    <option value="in_process">In Process</option>
+                    <option value="done">Done</option>
                   </select>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
@@ -1409,7 +1434,7 @@ select option{background:var(--white);color:var(--ink)}
             </div>
           </div>
           <!-- Summary pills (module status overview) -->
-          <div id="auditSummaryBar" style="display:flex;gap:5px;padding:6px 14px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0"></div>
+          <div id="auditSummaryBar" style="display:none"></div>
           <!-- AUDIT STAT BAR -->
           <div id="auditStatBar" style="display:flex;align-items:stretch;gap:0;background:var(--surface);border-bottom:1.5px solid var(--border);flex-shrink:0;min-height:56px">
             <div class="tstat-card">
@@ -1417,23 +1442,18 @@ select option{background:var(--white);color:var(--ink)}
               <span class="tstat-lbl">Total Items</span>
             </div>
             <div class="tstat-divider"></div>
-            <div class="tstat-card" onclick="document.getElementById('auditFilterStatus').value='accepted';renderAuditWork()">
+            <div class="tstat-card">
               <span class="tstat-num" style="color:var(--green)" id="astat_accepted_n">0</span>
-              <span class="tstat-lbl">Accepted</span>
+              <span class="tstat-lbl">Done</span>
             </div>
             <div class="tstat-divider"></div>
-            <div class="tstat-card" onclick="document.getElementById('auditFilterStatus').value='gathering';renderAuditWork()">
-              <span class="tstat-num" style="color:var(--blue)" id="astat_inprogress_n">0</span>
-              <span class="tstat-lbl">In Progress</span>
+            <div class="tstat-card">
+              <span class="tstat-num" style="color:var(--amber)" id="astat_inprogress_n">0</span>
+              <span class="tstat-lbl">In Process</span>
             </div>
             <div class="tstat-divider"></div>
-            <div class="tstat-card" onclick="document.getElementById('auditFilterStatus').value='query_raised';renderAuditWork()">
-              <span class="tstat-num" style="color:var(--red)" id="astat_query_n">0</span>
-              <span class="tstat-lbl">Query Raised</span>
-            </div>
-            <div class="tstat-divider"></div>
-            <div class="tstat-card" onclick="document.getElementById('auditFilterStatus').value='not_started';renderAuditWork()">
-              <span class="tstat-num" style="color:var(--amber)" id="astat_notstarted_n">0</span>
+            <div class="tstat-card">
+              <span class="tstat-num" style="color:var(--ink-mid)" id="astat_notstarted_n">0</span>
               <span class="tstat-lbl">Not Started</span>
             </div>
           </div>
@@ -1570,12 +1590,8 @@ select option{background:var(--white);color:var(--ink)}
               <label>Status</label>
               <select class="input" id="aSubStatus">
                 <option value="not_started">⬜ Not Started</option>
-                <option value="gathering">🔄 Gathering</option>
-                <option value="ready">📦 Ready to Share</option>
-                <option value="shared" id="aSubStatusShared">📤 Shared</option>
-                <option value="query_raised" id="aSubStatusQuery">❓ Query Raised</option>
-                <option value="replied">💬 Replied</option>
-                <option value="accepted" id="aSubStatusAccepted">✅ Accepted</option>
+                <option value="in_process">🔄 In Process</option>
+                <option value="done">✅ Done</option>
               </select>
             </div>
             <div class="fg">
@@ -1604,6 +1620,29 @@ select option{background:var(--white);color:var(--ink)}
                 <span>🚨 Escalate to CFO / Director</span>
               </label>
             </div>
+
+            <!-- PROCESS STEPS / CHECKLIST -->
+            <div class="fg" style="margin-top:4px">
+              <label style="display:flex;align-items:center;justify-content:space-between">
+                <span>✅ Process Steps / Checklist</span>
+                <span style="font-size:.65rem;color:var(--ink-dim);font-weight:400">Track each step under this task</span>
+              </label>
+              <!-- Quick suggestion chips -->
+              <div id="aStepSuggestions" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;margin-top:2px">
+                <span style="font-size:.67rem;color:var(--ink-dim);align-self:center">Quick add:</span>
+                <button type="button" class="a-step-suggestion" onclick="addAuditModalStepDirect('Matched with Books')">+ Matched with Books</button>
+                <button type="button" class="a-step-suggestion" onclick="addAuditModalStepDirect('Challan Matched')">+ Challan Matched</button>
+                <button type="button" class="a-step-suggestion" onclick="addAuditModalStepDirect('Reconciliation Done')">+ Reconciliation Done</button>
+                <button type="button" class="a-step-suggestion" onclick="addAuditModalStepDirect('Data Verified')">+ Data Verified</button>
+                <button type="button" class="a-step-suggestion" onclick="addAuditModalStepDirect('Reviewed & Approved')">+ Reviewed & Approved</button>
+              </div>
+              <div id="aStepsList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:7px"></div>
+              <div class="a-steps-add">
+                <input class="a-steps-input" id="aStepInput" placeholder="Type a custom step…" onkeydown="if(event.key==='Enter'){event.preventDefault();addAuditModalStep();}">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addAuditModalStep()">+ Add</button>
+              </div>
+            </div>
+
             <div class="form-actions">
               <button class="btn btn-ghost" onclick="closeAuditSubModal()">Cancel</button>
               <button class="btn btn-primary" onclick="saveAuditSub()" style="width:auto">Save →</button>
@@ -2996,7 +3035,7 @@ async function sendAuditEmail(item, assigneeMember, areaName, reason){
   const cfg=getEmailConfig();if(!cfg||!cfg.gasUrl||!assigneeMember?.email)return;
   try{
     const dueDisplay=item.dueDate?new Date(item.dueDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Not set';
-    const st=AUDIT_STATUS[item.status||'not_started'];
+    const st=getAuditStatus(item.status);
     const params={
       to_name:  assigneeMember.name,
       to_email: assigneeMember.email,
@@ -4498,6 +4537,8 @@ window.exportComplianceCSV=function(){
 */
 let auditParents=[];
 let auditSubs=[];
+let pendingAuditSteps=[];
+const openStepsRows=new Set();
 let auditCollapsed=JSON.parse(localStorage.getItem('audit_collapsed')||'{}');
 let auditDragSrc=null;
 let currentAuditModule='internal';
@@ -4514,14 +4555,14 @@ window.switchAuditModule=function(mod){
 };
 
 const AUDIT_STATUS={
-  not_started:{label:'Not Started',icon:'⬜',color:'var(--ink-dim)',bg:'var(--bg2)',border:'var(--border)'},
-  gathering:  {label:'Gathering',  icon:'🔄',color:'#c97300',bg:'var(--amber-bg)',border:'var(--amber-border)'},
-  ready:      {label:'Ready',      icon:'📦',color:'var(--blue)',bg:'var(--blue-bg)',border:'var(--blue-border)'},
-  shared:     {label:'Shared',     icon:'📤',color:'#6d28d9',bg:'var(--purple-bg)',border:'var(--purple-border)'},
-  query_raised:{label:'Query Raised',icon:'❓',color:'var(--red)',bg:'var(--red-bg)',border:'var(--red-border)'},
-  replied:    {label:'Replied',    icon:'💬',color:'#2056d8',bg:'var(--blue-bg)',border:'var(--blue-border)'},
-  accepted:   {label:'Accepted',   icon:'✅',color:'var(--green)',bg:'var(--green-bg)',border:'var(--green-border)'},
+  not_started:{label:'Not Started',icon:'◻',color:'var(--ink-dim)',bg:'var(--bg2)',border:'var(--border)'},
+  in_process: {label:'In Process', icon:'🔄',color:'#c97300',bg:'var(--amber-bg)',border:'var(--amber-border)'},
+  done:       {label:'Done',       icon:'✅',color:'var(--green)',bg:'var(--green-bg)',border:'var(--green-border)'},
 };
+// Map old Firebase status values to the new 3 statuses
+const AUDIT_STATUS_MAP={gathering:'in_process',ready:'in_process',shared:'in_process',replied:'in_process',query_raised:'in_process',accepted:'done'};
+function getAuditStatus(raw){const k=AUDIT_STATUS_MAP[raw]||raw||'not_started';return AUDIT_STATUS[k]||AUDIT_STATUS['not_started'];}
+function normaliseAuditStatus(raw){return AUDIT_STATUS_MAP[raw]||(AUDIT_STATUS[raw]?raw:'not_started');}
 const AUDIT_PRIORITY={
   high:  {label:'High',  icon:'🔴',color:'var(--red)',  bg:'var(--red-bg)',  border:'var(--red-border)'},
   medium:{label:'Medium',icon:'🟡',color:'var(--amber)',bg:'var(--amber-bg)',border:'var(--amber-border)'},
@@ -4590,13 +4631,12 @@ window.renderAuditWork=function(){
   // Summary bar
   const total=auditSubs.length;
   const byStatus={};
-  auditSubs.forEach(s=>{byStatus[s.status||'not_started']=(byStatus[s.status||'not_started']||0)+1;});
+  auditSubs.forEach(s=>{const ns=normaliseAuditStatus(s.status);byStatus[ns]=(byStatus[ns]||0)+1;});
   // Update audit stat bar
   const setAS=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
   setAS('astat_total_n', auditSubs.length);
-  setAS('astat_accepted_n', byStatus['accepted']||0);
-  setAS('astat_inprogress_n', (byStatus['gathering']||0)+(byStatus['ready']||0)+(byStatus['shared']||0)+(byStatus['replied']||0));
-  setAS('astat_query_n', byStatus['query_raised']||0);
+  setAS('astat_accepted_n', byStatus['done']||0);
+  setAS('astat_inprogress_n', byStatus['in_process']||0);
   setAS('astat_notstarted_n', byStatus['not_started']||0);
 
   const summaryBar=document.getElementById('auditSummaryBar');
@@ -4607,7 +4647,7 @@ window.renderAuditWork=function(){
     const pills=Object.entries(AUDIT_STATUS).map(([k,v])=>{
       const cnt=byStatus[k]||0;
       if(!cnt) return '';
-      return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid ${v.border};background:${v.bg};color:${v.color};font-family:'JetBrains Mono',monospace;cursor:pointer" onclick="document.getElementById('auditFilterStatus').value='${k}';renderAuditWork()">${v.icon} ${v.label} <span style="background:${v.color};color:#fff;border-radius:99px;padding:0 5px;font-size:.6rem">${cnt}</span></span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid ${v.border};background:${v.bg};color:${v.color};font-family:'JetBrains Mono',monospace">${v.icon} ${v.label} <span style="background:${v.color};color:#fff;border-radius:99px;padding:0 5px;font-size:.6rem">${cnt}</span></span>`;
     }).join('');
     const escalated=auditSubs.filter(s=>s.escalate).length;
     summaryBar.innerHTML=modBadge+pills+(escalated?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid var(--red-border);background:var(--red-bg);color:var(--red);font-family:'JetBrains Mono',monospace">🚨 Escalated <span style="background:var(--red);color:#fff;border-radius:99px;padding:0 5px;font-size:.6rem">${escalated}</span></span>`:'');
@@ -4637,15 +4677,15 @@ window.renderAuditWork=function(){
     const subs=allSubs.filter(s=>{
       if(!isAdmin()&&s.assigneeId!==currentUser?.uid&&s.reviewerId!==currentUser?.uid) return false;
       if(fDept&&s.dept!==fDept) return false;
-      if(fStatus&&(s.status||'not_started')!==fStatus) return false;
+      if(fStatus&&normaliseAuditStatus(s.status)!==fStatus) return false;
       if(fPri&&(s.priority||'medium')!==fPri) return false;
       if(fAssignee&&s.assigneeId!==fAssignee) return false;
       if(q&&!(p.name||'').toLowerCase().includes(q)&&!(s.subTask||'').toLowerCase().includes(q)) return false;
       return true;
     });
 
-    const accepted=allSubs.filter(s=>s.status==='accepted').length;
-    const queries=allSubs.filter(s=>s.status==='query_raised').length;
+    const accepted=allSubs.filter(s=>normaliseAuditStatus(s.status)==='done').length;
+    const queries=0; // query_raised status removed
     const pct=allSubs.length>0?Math.round((accepted/allSubs.length)*100):0;
     const barColor=pct===100?'var(--green)':queries>0?'var(--red)':pct>50?'var(--blue)':'var(--amber)';
 
@@ -4688,12 +4728,12 @@ window.renderAuditWork=function(){
       } else {
         subs.forEach((s,si)=>{
           const assignee=members.find(m=>m.id===s.assigneeId);
-          const st=AUDIT_STATUS[s.status||'not_started'];
+          const st=getAuditStatus(s.status);
           const pr=AUDIT_PRIORITY[s.priority||'medium'];
-          const isOD=s.dueDate&&s.dueDate<today&&s.status!=='accepted';
+          const isOD=s.dueDate&&s.dueDate<today&&normaliseAuditStatus(s.status)!=='done';
           const dueDisplay=s.dueDate?new Date(s.dueDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-';
           const hasQuery=!!(s.auditQuery||s.kpmgQuery||'').trim();
-          rows+=`<tr class="a-sub-row${s.status==='accepted'?' a-sub-done':''}"
+          rows+=`<tr class="a-sub-row${normaliseAuditStatus(s.status)==='done'?' a-sub-done':''}"
             draggable="true"
             ondragstart="auditDragStartSub(event,'${s.id}','${p.id}')"
             ondragover="auditDragOverSub(event,'${s.id}','${p.id}')"
@@ -4706,8 +4746,9 @@ window.renderAuditWork=function(){
               <div style="display:flex;align-items:center;gap:5px;padding-left:2px">
                 <span style="color:var(--border2);font-size:.65rem;flex-shrink:0;opacity:.6;line-height:1">└</span>
                 <div style="min-width:0;overflow:hidden">
-                  <div class="a-sub-name${s.status==='accepted'?' a-strikethrough':''}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.subTask||'—')}</div>
+                  ${normaliseAuditStatus(s.status)==="done"?'<span style="font-size:.65rem;margin-right:3px">✅</span>':''}<div class="a-sub-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline">${esc(s.subTask||'—')}</div>
                   ${s.escalate?`<span style="font-size:.6rem;font-weight:700;color:var(--red);font-family:'JetBrains Mono',monospace">🚨 Escalated</span>`:''}
+                  ${(()=>{const steps=s.steps||[];if(!steps.length)return '';const doneSteps=steps.filter(st=>st.done).length;const allDone=doneSteps===steps.length;return `<span class="a-steps-badge${allDone?' all-done':''}" onclick="event.stopPropagation();toggleAuditStepsRow('${s.id}')" title="Click to expand steps">📋 ${doneSteps}/${steps.length} steps</span>`})()}
                 </div>
               </div>
             </td>
@@ -4716,11 +4757,13 @@ window.renderAuditWork=function(){
             <td class="a-sub-td" style="${isOD?'color:var(--red);font-weight:700':'color:var(--ink-mid)'};font-family:'JetBrains Mono',monospace;font-size:.72rem">${isOD?'🔴 ':''}${dueDisplay}</td>
             <td class="a-sub-td" onclick="event.stopPropagation()">
               <select class="input" style="font-size:.72rem;padding:4px 24px 4px 6px;border-radius:6px;border:1.5px solid ${st.border};background:${st.bg};color:${st.color};font-weight:700;cursor:pointer;min-width:120px" onchange="quickAuditStatus('${s.id}',this.value)">
-                ${Object.entries(AUDIT_STATUS).map(([k,v])=>`<option value="${k}" ${(s.status||'not_started')===k?'selected':''}>${v.icon} ${v.label}</option>`).join('')}
+                ${Object.entries(AUDIT_STATUS).map(([k,v])=>`<option value="${k}" ${normaliseAuditStatus(s.status)===k?'selected':''}>${v.icon} ${v.label}</option>`).join('')}
               </select>
             </td>
             <td class="a-sub-td">
-              <span style="display:inline-flex;align-items:center;gap:3px;font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:99px;border:1px solid ${pr.border};background:${pr.bg};color:${pr.color}">${pr.icon}</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:6px;border:1.5px solid ${pr.border};background:${pr.bg};color:${pr.color};font-family:'JetBrains Mono',monospace;letter-spacing:.02em">
+                <span style="width:5px;height:5px;border-radius:50%;background:${pr.color};flex-shrink:0;display:inline-block"></span>${pr.label}
+              </span>
             </td>
             <td class="a-sub-td" onclick="event.stopPropagation()">
               ${s.folderLink?(isLocalPath(s.folderLink)?`<a href="openfolder:///${s.folderLink.replace(/\\/g,'/')}" class="a-folder-btn" title="${esc(s.folderLink)}">📂 Open</a>`:`<a href="${esc(s.folderLink)}" target="_blank" rel="noopener" class="a-folder-btn">📂 Open</a>`):`<span class="a-dim">—</span>`}
@@ -4732,19 +4775,51 @@ window.renderAuditWork=function(){
               </div>
             </td>
           </tr>`;
+          // Steps expansion row
+          const stepsArr=s.steps||[];
+          if(stepsArr.length){
+            const doneSteps=stepsArr.filter(st=>st.done).length;
+            const allDone=doneSteps===stepsArr.length;
+            rows+=`<tr class="a-steps-row" id="asteps_${s.id}" style="display:none" onclick="event.stopPropagation()">
+              <td colspan="9">
+                <div class="a-steps-wrap">
+                  <div class="a-steps-title">
+                    <span>📋 Process Steps</span>
+                    <div style="flex:1;height:3px;background:var(--border);border-radius:99px;overflow:hidden;max-width:120px"><div style="height:100%;width:${allDone?100:Math.round(doneSteps/stepsArr.length*100)}%;background:${allDone?'var(--green)':'var(--accent)'};border-radius:99px;transition:width .3s"></div></div>
+                    <span style="color:${allDone?'var(--green)':'var(--ink-dim)'}">${doneSteps}/${stepsArr.length} done</span>
+                  </div>
+                  ${stepsArr.map(st=>`<div class="a-step-item${st.done?' done':''}" id="astep_${s.id}_${st.id}">
+                    <input type="checkbox" ${st.done?'checked':''} onclick="event.stopPropagation()" onchange="toggleAuditStepInline('${s.id}','${st.id}',this.checked)">
+                    <span class="a-step-label${st.done?' done':''}">${esc(st.label)}</span>
+                    ${st.done&&st.doneBy?`<span class="a-step-done-by">✓ ${esc(st.doneBy)}</span>`:''}
+                    ${isAdmin()?`<button class="a-step-del" onclick="deleteAuditStepInline('${s.id}','${st.id}')" title="Remove step">✕</button>`:''}
+                  </div>`).join('')}
+                  ${isAdmin()?`<div class="a-steps-add" style="margin-top:3px">
+                    <input class="a-steps-input" id="asinput_${s.id}" placeholder="Add a step…" onkeydown="if(event.key==='Enter'){event.preventDefault();addAuditStepInline('${s.id}',this);}">
+                    <button type="button" class="btn btn-ghost btn-xs" onclick="addAuditStepInline('${s.id}',document.getElementById('asinput_${s.id}'))">+ Add</button>
+                  </div>`:''}
+                </div>
+              </td>
+            </tr>`;
+          }
         });
       }
     }
   });
   tbody.innerHTML=rows;
+  // Restore previously open steps rows
+  openStepsRows.forEach(sid=>{
+    const row=document.getElementById('asteps_'+sid);
+    if(row) row.style.display='';
+  });
 };
 
 /* ── Status cycle on click ── */
 window.cycleAuditStatus=async function(sid,current){
-  const order=['not_started','gathering','ready','shared','query_raised','replied','accepted'];
+  const order=['not_started','in_process','done'];
   const next=order[(order.indexOf(current)+1)%order.length];
   await update(ref(db,`auditWork/subTasks/${sid}`),{status:next,updatedAt:Date.now()});
-  toast(`${AUDIT_STATUS[next].icon} ${AUDIT_STATUS[next].label}`);
+  toast(`${getAuditStatus(next).icon} ${getAuditStatus(next).label}`);
 };
 
 /* ── Local path helpers for Google Drive ── */
@@ -4837,8 +4912,19 @@ window.applyDrivePrefix=function(){
 
 /* ── Status dropdown quick change ── */
 window.quickAuditStatus=async function(sid,newStatus){
-  const st=AUDIT_STATUS[newStatus];
+  const st=getAuditStatus(newStatus);
   if(!st) return;
+  // Block setting Done manually if steps exist and not all done
+  if(newStatus==='done'){
+    const sub=auditSubs.find(x=>x.id===sid);
+    const steps=sub?.steps||[];
+    if(steps.length>0&&!steps.every(s=>s.done)){
+      const remaining=steps.filter(s=>!s.done).length;
+      toast(`⚠ Complete all ${steps.length} steps first (${remaining} remaining)`);
+      renderAuditWork();
+      return;
+    }
+  }
   await update(ref(db,`auditWork/subTasks/${sid}`),{status:newStatus,updatedAt:Date.now()});
   toast(`${st.icon} ${st.label}`);
   const s=auditSubs.find(x=>x.id===sid);
@@ -4846,8 +4932,7 @@ window.quickAuditStatus=async function(sid,newStatus){
     const assignee=members.find(m=>m.id===s.assigneeId);
     const parent=auditParents.find(p=>p.id===s.parentId);
     const areaName=parent?parent.name:'Audit';
-    if(newStatus==='accepted'&&assignee) await sendAuditEmail({...s,status:newStatus},assignee,areaName,'✅ Your audit task has been accepted/completed.');
-    if(newStatus==='query_raised'&&assignee) await sendAuditEmail({...s,status:newStatus},assignee,areaName,'❓ A query has been raised on your audit task.');
+    if(newStatus==='done'&&assignee) await sendAuditEmail({...s,status:newStatus},assignee,areaName,'✅ Your audit task has been marked Done.');
   }
 };
 
@@ -4954,9 +5039,9 @@ window.openAuditSubModal=function(parentId,sid){
   const auditorName=isStatutory?'Auditor':isTax?'Tax Auditor':'Reviewer';
   document.getElementById('aSubSubmittedLabel').textContent=isStatutory?'Submitted to Auditor On':isTax?'Submitted to Tax Auditor On':'Submitted for Review On';
   document.getElementById('aSubQueryLabel').textContent=isStatutory?'📝 Auditor Query / Observation':isTax?'📝 Tax Auditor Query / Observation':'📝 Review Query / Observation';
-  document.getElementById('aSubStatusShared').textContent=isStatutory?'📤 Shared with Auditor':isTax?'📤 Shared with Tax Auditor':'📤 Shared for Review';
-  document.getElementById('aSubStatusQuery').textContent=isStatutory?'❓ Query Raised by Auditor':isTax?'❓ Query Raised by Tax Auditor':'❓ Query Raised';
-  document.getElementById('aSubStatusAccepted').textContent=isStatutory?'✅ Accepted by Auditor':isTax?'✅ Accepted by Tax Auditor':'✅ Accepted';
+  //document.getElementById('aSubStatusShared').textContent=isStatutory?'📤 Shared with Auditor':isTax?'📤 Shared with Tax Auditor':'📤 Shared for Review';
+  //document.getElementById('aSubStatusQuery').textContent=isStatutory?'❓ Query Raised by Auditor':isTax?'❓ Query Raised by Tax Auditor':'❓ Query Raised';
+  //document.getElementById('aSubStatusAccepted').textContent=isStatutory?'✅ Accepted by Auditor':isTax?'✅ Accepted by Tax Auditor':'✅ Accepted';
   document.getElementById('aSubAuditQuery').placeholder=isStatutory?'Paste auditor\'s query or observation here…':isTax?'Paste tax auditor\'s query or observation here…':'Paste review query or observation here…';
   document.getElementById('aSubReviewerLabel').textContent=isStatutory?'External Auditor':isTax?'Tax Auditor':'Internal Reviewer';
   document.getElementById('aSubDept').value=s?.dept||'';
@@ -4968,6 +5053,9 @@ window.openAuditSubModal=function(parentId,sid){
   document.getElementById('aSubAuditQuery').value=s?.auditQuery||s?.kpmgQuery||'';
   document.getElementById('aSubResponse').value=s?.response||'';
   document.getElementById('aSubEscalate').checked=!!s?.escalate;
+  // Load process steps
+  pendingAuditSteps=(s?.steps||[]).map(st=>({...st}));
+  renderAuditModalSteps();
   const asel=document.getElementById('aSubAssignee');
   const rsel=document.getElementById('aSubReviewer');
   const opts=`<option value="">— Select —</option>`+members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
@@ -4983,6 +5071,96 @@ window.openAuditSubModal=function(parentId,sid){
   setTimeout(()=>document.getElementById('aSubTask').focus(),50);
 };
 window.closeAuditSubModal=function(){document.getElementById('auditSubModal').style.display='none';};
+
+/* ══ AUDIT PROCESS STEPS — MODAL MANAGEMENT ══ */
+window.renderAuditModalSteps=function(){
+  const el=document.getElementById('aStepsList');
+  if(!el) return;
+  if(!pendingAuditSteps.length){
+    el.innerHTML='<div style="font-size:.75rem;color:var(--ink-dim);padding:4px 2px">No steps added yet. Use quick add above or type a custom step.</div>';
+    return;
+  }
+  el.innerHTML=pendingAuditSteps.map((st,i)=>`
+    <div class="modal-step-item">
+      <span style="font-size:.75rem;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;min-width:18px">${i+1}.</span>
+      <span class="modal-step-label">${esc(st.label)}</span>
+      ${st.done?`<span style="font-size:.65rem;color:var(--green);font-family:'JetBrains Mono',monospace">✓ Done</span>`:''}
+      <button type="button" class="modal-step-del" onclick="removeAuditModalStep(${i})">✕</button>
+    </div>`).join('');
+};
+
+window.addAuditModalStep=function(){
+  const inp=document.getElementById('aStepInput');
+  const val=(inp?.value||'').trim();
+  if(!val) return;
+  // Avoid duplicates
+  if(pendingAuditSteps.some(st=>st.label.toLowerCase()===val.toLowerCase())){toast('Step already exists.');return;}
+  pendingAuditSteps.push({id:uid(),label:val,done:false});
+  if(inp) inp.value='';
+  renderAuditModalSteps();
+};
+
+window.addAuditModalStepDirect=function(label){
+  if(pendingAuditSteps.some(st=>st.label.toLowerCase()===label.toLowerCase())){toast('Step already added.');return;}
+  pendingAuditSteps.push({id:uid(),label,done:false});
+  renderAuditModalSteps();
+};
+
+window.removeAuditModalStep=function(i){
+  pendingAuditSteps.splice(i,1);
+  renderAuditModalSteps();
+};
+
+/* ══ AUDIT PROCESS STEPS — INLINE TABLE INTERACTIONS ══ */
+window.toggleAuditStepsRow=function(sid){
+  const row=document.getElementById('asteps_'+sid);
+  if(!row) return;
+  const isHidden=row.style.display==='none';
+  if(isHidden){ row.style.display=''; openStepsRows.add(sid); }
+  else{ row.style.display='none'; openStepsRows.delete(sid); }
+};
+
+window.toggleAuditStepInline=async function(sid,stepId,done){
+  const sub=auditSubs.find(x=>x.id===sid);
+  if(!sub) return;
+  const steps=(sub.steps||[]).map(st=>st.id===stepId?{...st,done,doneBy:done?(currentUser?.displayName||currentUser?.email||'You'):null,doneAt:done?Date.now():null}:st);
+  const doneCnt=steps.filter(s=>s.done).length;
+  const allDone=doneCnt===steps.length;
+  const currentStatus=normaliseAuditStatus(sub.status);
+  const updates={steps,updatedAt:Date.now()};
+  if(allDone&&currentStatus!=='done'){
+    updates.status='done';
+    toast('🎉 All steps done! Status set to Done');
+  } else if(!allDone&&currentStatus==='done'){
+    updates.status='in_process';
+    toast('↩ Step unmarked — status reset to In Process');
+  } else {
+    toast(done?`✅ Step marked done (${doneCnt}/${steps.length})`:`↩ Step unmarked (${doneCnt}/${steps.length} done)`);
+  }
+  await update(ref(db,`auditWork/subTasks/${sid}`),updates);
+};
+
+window.addAuditStepInline=async function(sid,inp){
+  const val=(inp?.value||'').trim();
+  if(!val) return;
+  const sub=auditSubs.find(x=>x.id===sid);
+  if(!sub) return;
+  const existing=sub.steps||[];
+  if(existing.some(st=>st.label.toLowerCase()===val.toLowerCase())){toast('Step already exists.');return;}
+  const steps=[...existing,{id:uid(),label:val,done:false}];
+  await update(ref(db,`auditWork/subTasks/${sid}`),{steps,updatedAt:Date.now()});
+  if(inp) inp.value='';
+  toast('✅ Step added');
+};
+
+window.deleteAuditStepInline=async function(sid,stepId){
+  if(!confirm('Remove this step?')) return;
+  const sub=auditSubs.find(x=>x.id===sid);
+  if(!sub) return;
+  const steps=(sub.steps||[]).filter(st=>st.id!==stepId);
+  await update(ref(db,`auditWork/subTasks/${sid}`),{steps,updatedAt:Date.now()});
+  toast('Step removed');
+};
 
 /* Open Add Task from header — shows area selector in modal */
 window.openAuditSubModalFromHeader=function(){
@@ -5013,6 +5191,8 @@ window.openAuditSubModalFromHeader=function(){
   document.getElementById('aSubAuditQuery').value='';
   document.getElementById('aSubResponse').value='';
   document.getElementById('aSubEscalate').checked=false;
+  pendingAuditSteps=[];
+  renderAuditModalSteps();
   const opts=`<option value="">— Select —</option>`+members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
   document.getElementById('aSubAssignee').innerHTML=opts;
   document.getElementById('aSubReviewer').innerHTML=opts;
@@ -5049,6 +5229,7 @@ window.saveAuditSub=async function(){
     auditQuery:document.getElementById('aSubAuditQuery').value.trim()||'',
     response:document.getElementById('aSubResponse').value.trim()||'',
     escalate:document.getElementById('aSubEscalate').checked,
+    steps:pendingAuditSteps.length?pendingAuditSteps:[],
     updatedAt:Date.now(),
     ts:eid?(auditSubs.find(x=>x.id===eid)?.ts||Date.now()):Date.now(),
     order:eid?(auditSubs.find(x=>x.id===eid)?.order??Date.now()):auditSubs.filter(s=>s.parentId===parentId).length*100,
@@ -5067,12 +5248,12 @@ window.saveAuditSub=async function(){
       if(assignee) await sendAuditEmail({...data,id:eid},assignee,parentName,'You have been assigned an audit task.');
     }
     // Email: task completed (accepted)
-    if(newStatus==='accepted'&&prevStatus!=='accepted'&&assigneeId){
+    if(normaliseAuditStatus(newStatus)==='done'&&normaliseAuditStatus(prevStatus)!=='done'&&assigneeId){
       const assignee=members.find(m=>m.id===assigneeId);
-      if(assignee) await sendAuditEmail({...data,id:eid},assignee,parentName,'✅ Your audit task has been accepted/completed.');
+      if(assignee) await sendAuditEmail({...data,id:eid},assignee,parentName,'✅ Your audit task has been marked Done.');
     }
-    // Email: query raised
-    if(newStatus==='query_raised'&&prevStatus!=='query_raised'&&assigneeId){
+    // Email: query raised (status removed)
+    if(false&&newStatus==='query_raised'&&prevStatus!=='query_raised'&&assigneeId){
       const assignee=members.find(m=>m.id===assigneeId);
       if(assignee) await sendAuditEmail({...data,id:eid},assignee,parentName,'❓ A query has been raised on your audit task.');
     }
@@ -5109,7 +5290,7 @@ window.exportAuditCSV=function(){
     else subs.forEach(s=>{
       const assignee=members.find(m=>m.id===s.assigneeId);
       const reviewer=members.find(m=>m.id===s.reviewerId);
-      const st=AUDIT_STATUS[s.status||'not_started'];
+      const st=getAuditStatus(s.status);
       rows.push([
         p.module||'internal',`"${p.name}"`,p.fy||'',`"${(s.subTask||'').replace(/"/g,'""')}"`,
         s.dept||'',s.priority||'',
