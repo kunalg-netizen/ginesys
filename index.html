@@ -2837,6 +2837,16 @@ window.copyGasScript=function(){
 '    var d = JSON.parse(e.postData.contents);',
 '    var action = d.action || "";',
 '',
+'    // ★ digest action — sends pre-built HTML email directly',
+'    if (action === "digest") {',
+'      if (d.to_email && d.html) {',
+'        var opts = {to:d.to_email, subject:d.subject||"Daily Digest", body:d.plain||"", htmlBody:d.html};',
+'        if (d.cc_email) opts.cc = d.cc_email;',
+'        MailApp.sendEmail(opts);',
+'      }',
+'      return _json({success:true});',
+'    }',
+'    if (action === "ping") { return _json({success:true, digest:true, version:3}); }',
 '    if (action === "check_digest") {',
 '      var enabled = !!PROPS.getProperty("digest_enabled");',
 '      var adminEmail = PROPS.getProperty("admin_email") || "";',
@@ -3186,45 +3196,46 @@ function buildDigestPlain(name,todayT,overdueT,upcomingT,todayC,overdueC,upcomin
 
 window.sendManualDigest=async function(){
   const cfg=getEmailConfig();
-  if(!cfg||!cfg.gasUrl){toast('⚠ Save your GAS URL first.');return;}
+  if(!cfg||!cfg.gasUrl){toast('Save your GAS URL first.');return;}
   if(!isAdmin()){toast('Only admins can send the digest.');return;}
-  if(!confirm('Send the daily digest email to all team members right now?')) return;
-  toast('📨 Sending digest to all members…');
+  // Check if GAS supports digest action
+  let gasSupportsDigest=false;
+  try{
+    const pr=await fetch(cfg.gasUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'ping'})});
+    const pd=await pr.json();
+    gasSupportsDigest=!!pd.digest;
+  }catch(e){}
+  if(!gasSupportsDigest){
+    alert('Your GAS script needs to be updated to send digest emails.\n\nSteps:\n1. Email Settings -> Copy GAS Script\n2. Go to script.google.com -> paste -> Save\n3. Deploy -> Manage Deployments -> Edit (pencil) -> New Version -> Deploy\n4. Come back and try again.');
+    return;
+  }
+  if(!confirm('Send daily digest email to all team members now?'))return;
+  toast('Sending digest...');
   try{
     const today=new Date().toISOString().split('T')[0];
-    const threeDays=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
-    const now=new Date();
-    const dateLabel=now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+    const soon=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+    const dateLabel=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
     let sent=0;
     for(const m of members){
-      if(!m.email) continue;
+      if(!m.email)continue;
       const todayT   =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due===today);
       const overdueT =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due<today);
-      const upcomingT=tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due>today&&t.due<=threeDays);
+      const upcomingT=tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due>today&&t.due<=soon);
       const todayC   =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due===today);
       const overdueC =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due<today);
-      const upcomingC=complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due>today&&c.due<=threeDays);
-      if(!todayT.length&&!overdueT.length&&!upcomingT.length&&!todayC.length&&!overdueC.length&&!upcomingC.length) continue;
-      const html=buildDigestHtml(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
-      const plain=buildDigestPlain(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
-      // Pass pre-built htmlBody — GAS uses it directly if present, no redeploy needed
-      await sendViaGAS(cfg,{
-        to_name:m.name,
-        to_email:m.email,
-        task_title:'Daily Digest',
-        task_status:'',
-        task_priority:'',
-        task_due:dateLabel,
-        assigned_by:'Ginesysone Finance',
-        context:'Please view this email in an HTML-capable client.',
-        htmlBody:html,
-        plainBody:plain,
-        subject:'\uD83D\uDCCB Daily Digest \u2014 '+dateLabel
-      });
+      const upcomingC=complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due>today&&c.due<=soon);
+      if(!todayT.length&&!overdueT.length&&!upcomingT.length&&!todayC.length&&!overdueC.length&&!upcomingC.length)continue;
+      const digestHtml=buildDigestHtml(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
+      const digestPlain=buildDigestPlain(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
+      await fetch(cfg.gasUrl,{method:'POST',headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({action:'digest',to_email:m.email,to_name:m.name,
+          subject:'Daily Digest - '+dateLabel,
+          html:digestHtml,plain:digestPlain,
+          cc_email:(cfg.ccEmail&&cfg.ccEmail!==m.email)?cfg.ccEmail:null})});
       sent++;
     }
-    toast('✅ Digest sent to '+sent+' member'+(sent!==1?'s':'')+'!');
-  }catch(e){toast('⚠ Digest error: '+e.message);}
+    toast('Digest sent to '+sent+' member'+(sent!==1?'s':'')+'!');
+  }catch(e){toast('Digest error: '+e.message);}
 };
 
 // ── Toggle digest email preview panel (renders live data) ──
