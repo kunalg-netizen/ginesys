@@ -1989,51 +1989,14 @@ function doPost(e) {
           <button class="btn btn-ghost btn-sm" id="digestPreviewToggleBtn" onclick="toggleDigestPreview()" style="width:auto">&#128065; Preview Email Template</button>
         </div>
 
-        <!-- Digest email template preview -->
+        <!-- Digest email template preview (live-rendered from real data) -->
         <div id="digestPreviewPanel" style="display:none;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px">
           <div style="background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace">Email Preview &#8212; Daily Digest</div>
-            <div style="font-size:.7rem;color:var(--ink-dim)">Subject: &#128203; Your Daily Digest &#8212; 10 Apr 2026</div>
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace">Email Preview &mdash; Daily Digest</div>
+            <div id="digestPreviewSubject" style="font-size:.7rem;color:var(--ink-dim)">Subject: &#128203; Your Daily Digest</div>
           </div>
-          <div style="background:#F0F2F8;padding:18px 14px;max-height:420px;overflow-y:auto">
-            <div style="max-width:540px;margin:0 auto;font-family:Arial,sans-serif">
-              <div style="background:linear-gradient(135deg,#2056d8,#6d28d9);border-radius:14px 14px 0 0;padding:22px 24px 18px">
-                <div style="font-size:11px;color:rgba(255,255,255,.7);font-weight:700;letter-spacing:.5px">GINESYSONE FINANCE &#183; DAILY DIGEST</div>
-                <div style="font-size:19px;font-weight:800;color:#fff;margin-top:7px">Good Morning, Dilip! &#128075;</div>
-                <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px">Here is your task &amp; compliance summary for today</div>
-              </div>
-              <div style="background:#fff;padding:20px 24px">
-                <div style="margin-bottom:16px">
-                  <div style="font-size:12px;font-weight:700;color:#1D4ED8;padding:7px 11px;background:#EFF6FF;border-radius:7px;margin-bottom:8px">&#128197; Due Today &#8212; Tasks</div>
-                  <table style="width:100%;border:1.5px solid #E5E8F0;border-radius:8px;border-collapse:collapse">
-                    <tr style="background:#fff"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600;border-bottom:1px solid #F1F5F9">GST Reconciliation Report</td><td style="padding:8px 12px;font-size:11px;color:#64748B;border-bottom:1px solid #F1F5F9;white-space:nowrap">&#128197; 10 Apr 2026</td></tr>
-                    <tr style="background:#F8FAFC"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600">TDS Certificate Issuance</td><td style="padding:8px 12px;font-size:11px;color:#64748B;white-space:nowrap">&#128197; 10 Apr 2026</td></tr>
-                  </table>
-                </div>
-                <div style="margin-bottom:16px">
-                  <div style="font-size:12px;font-weight:700;color:#B91C1C;padding:7px 11px;background:#FEF2F2;border-radius:7px;margin-bottom:8px">&#9888;&#65039; Overdue &#8212; Tasks</div>
-                  <table style="width:100%;border:1.5px solid #E5E8F0;border-radius:8px;border-collapse:collapse">
-                    <tr style="background:#fff"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600">Form 16 Preparation</td><td style="padding:8px 12px;font-size:11px;color:#64748B;white-space:nowrap">&#128197; 5 Apr 2026</td></tr>
-                  </table>
-                </div>
-                <div style="margin-bottom:16px">
-                  <div style="font-size:12px;font-weight:700;color:#0369A1;padding:7px 11px;background:#E0F2FE;border-radius:7px;margin-bottom:8px">&#128737; Due Today &#8212; Compliance</div>
-                  <table style="width:100%;border:1.5px solid #E5E8F0;border-radius:8px;border-collapse:collapse">
-                    <tr style="background:#fff"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600">TDS Working</td><td style="padding:8px 12px;font-size:11px;color:#64748B;white-space:nowrap">&#128197; 10 Apr 2026</td></tr>
-                  </table>
-                </div>
-                <div>
-                  <div style="font-size:12px;font-weight:700;color:#047857;padding:7px 11px;background:#F0FDF9;border-radius:7px;margin-bottom:8px">&#128198; Upcoming &#8212; Compliance</div>
-                  <table style="width:100%;border:1.5px solid #E5E8F0;border-radius:8px;border-collapse:collapse">
-                    <tr style="background:#fff"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600;border-bottom:1px solid #F1F5F9">GSTR-1</td><td style="padding:8px 12px;font-size:11px;color:#64748B;border-bottom:1px solid #F1F5F9;white-space:nowrap">&#128197; 11 Apr 2026</td></tr>
-                    <tr style="background:#F8FAFC"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600">STPI Return</td><td style="padding:8px 12px;font-size:11px;color:#64748B;white-space:nowrap">&#128197; 12 Apr 2026</td></tr>
-                  </table>
-                </div>
-              </div>
-              <div style="background:#fff;border-radius:0 0 14px 14px;padding:0 24px 16px;border-top:1.5px solid #E5E8F0;text-align:center">
-                <div style="padding-top:12px;font-size:11px;color:#94A3B8">Ginesysone Finance Task Board &#183; Automated daily digest &#183; Do not reply</div>
-              </div>
-            </div>
+          <div style="background:#F0F2F8;padding:14px;max-height:440px;overflow-y:auto" id="digestPreviewBody">
+            <div style="text-align:center;padding:30px;color:#94A3B8;font-size:.8rem">Loading preview…</div>
           </div>
         </div>
       </div>
@@ -2888,7 +2851,15 @@ window.copyGasScript=function(){
 '        .atHour(10).everyDays(1).inTimezone("Asia/Kolkata").create();',
 '      return _json({success:true, message:"Daily digest enabled! Emails will go out at 10 AM IST on weekdays."});',
 '    }',
-'    if (action === "disable_digest") {',
+'    if (action === \"send_html\") {',
+'      // Pre-built HTML digest from client — just deliver it',
+'      if (d.to_email) {',
+'        var mailOpts = { to: d.to_email, subject: d.subject || \"Daily Digest\", body: d.plain || \"\", htmlBody: d.html || \"\", cc: d.cc_email||undefined };',
+'        MailApp.sendEmail(mailOpts);',
+'      }',
+'      return _json({success:true});',
+'    }',
+'    if (action === \"disable_digest\") {',
 '      PROPS.deleteProperty("digest_enabled");',
 '      _removeTriggers();',
 '      return _json({success:true});',
@@ -3166,40 +3137,89 @@ window.toggleDailyDigest=async function(){
   btn.disabled=false;
 };
 // ── Manual digest send ──
+// ── Build digest HTML (shared by preview and send) ──
+function buildDigestHtml(name, todayT, overdueT, upcomingT, todayC, overdueC, upcomingC){
+  const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';
+  const fmtDate=d=>{if(!d)return'—';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});};
+  const sec=(title,items,bg,color,kind)=>{
+    if(!items.length)return'';
+    let rows=items.map((it,i)=>{
+      const nm=kind==='comp'?it.name:it.title;
+      return '<tr style="background:'+(i%2===0?'#fff':'#F8FAFC')+'">'
+        +'<td style="padding:9px 14px;font-size:13px;color:#1E293B;font-weight:600;border-bottom:1px solid #F1F5F9;width:70%">'+esc(nm)+'</td>'
+        +'<td style="padding:9px 14px;font-size:12px;color:#64748B;border-bottom:1px solid #F1F5F9;white-space:nowrap;text-align:right">&#128197; '+esc(fmtDate(it.due))+'</td>'
+        +'</tr>';
+    }).join('');
+    return '<div style="margin-bottom:18px">'
+      +'<div style="font-size:12px;font-weight:700;color:'+color+';padding:7px 12px;background:'+bg+';border-radius:7px;margin-bottom:8px">'+title+'</div>'
+      +'<table width="100%" style="border:1.5px solid #E5E8F0;border-radius:9px;border-collapse:collapse;overflow:hidden">'+rows+'</table>'
+      +'</div>';
+  };
+  const now=new Date();
+  const dateLabel=now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  let body='';
+  body+=sec('&#128197; Due Today — Tasks',     todayT,   '#EFF6FF','#1D4ED8','task');
+  body+=sec('&#9888;&#65039; Overdue — Tasks',  overdueT, '#FEF2F2','#B91C1C','task');
+  body+=sec('&#128252; Upcoming (3 days) — Tasks',upcomingT,'#F5F3FF','#6D28D9','task');
+  body+=sec('&#128737; Due Today — Compliance', todayC,   '#E0F2FE','#0369A1','comp');
+  body+=sec('&#128680; Overdue — Compliance',   overdueC, '#FEF2F2','#B91C1C','comp');
+  body+=sec('&#128198; Upcoming — Compliance',  upcomingC,'#F0FDF9','#047857','comp');
+  return '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F0F2F8;padding:28px 14px;font-family:Arial,sans-serif"><tr><td align="center">'
+    +'<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%">'
+    +'<tr><td style="background:linear-gradient(135deg,#2056d8,#6d28d9);border-radius:14px 14px 0 0;padding:24px 28px 20px">'
+    +'<div style="font-size:11px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.5px">GINESYSONE FINANCE &middot; DAILY DIGEST</div>'
+    +'<div style="font-size:20px;font-weight:800;color:#fff;margin-top:8px">Good Morning, '+esc(name)+'! &#128075;</div>'
+    +'<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:5px">Task &amp; compliance summary &mdash; '+dateLabel+'</div>'
+    +'</td></tr>'
+    +'<tr><td style="background:#fff;padding:22px 24px">'+body+'</td></tr>'
+    +'<tr><td style="background:#fff;border-radius:0 0 14px 14px;border-top:1.5px solid #E5E8F0;padding:0 24px 18px;text-align:center">'
+    +'<div style="padding-top:12px;font-size:11px;color:#94A3B8">Ginesysone Finance Task Board &middot; Daily digest &middot; Do not reply</div>'
+    +'</td></tr></table></td></tr></table>';
+}
+
+function buildDigestPlain(name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC){
+  const lines=['Hi '+name+', here is your daily digest:\n'];
+  const sec=(label,items,kind)=>{if(!items.length)return;lines.push('── '+label+' ──');items.forEach(it=>lines.push('• '+(kind==='comp'?it.name:it.title)+' | Due: '+(it.due||'—')));lines.push('');};
+  sec('Due Today — Tasks',todayT,'task');sec('Overdue — Tasks',overdueT,'task');sec('Upcoming — Tasks',upcomingT,'task');
+  sec('Due Today — Compliance',todayC,'comp');sec('Overdue — Compliance',overdueC,'comp');sec('Upcoming — Compliance',upcomingC,'comp');
+  lines.push('— Ginesysone Finance Task Board');
+  return lines.join('\n');
+}
+
 window.sendManualDigest=async function(){
   const cfg=getEmailConfig();
   if(!cfg||!cfg.gasUrl){toast('⚠ Save your GAS URL first.');return;}
   if(!isAdmin()){toast('Only admins can send the digest.');return;}
   if(!confirm('Send the daily digest email to all team members right now?')) return;
-  const btn=document.getElementById('digestToggleBtn');
   toast('📨 Sending digest to all members…');
   try{
     const today=new Date().toISOString().split('T')[0];
     const threeDays=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+    const now=new Date();
+    const dateLabel=now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
     let sent=0;
     for(const m of members){
       if(!m.email) continue;
-      // Tasks for this member
       const todayT   =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due===today);
       const overdueT =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due<today);
       const upcomingT=tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due>today&&t.due<=threeDays);
-      // Compliance for this member
       const todayC   =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due===today);
       const overdueC =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due<today);
       const upcomingC=complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due>today&&c.due<=threeDays);
       if(!todayT.length&&!overdueT.length&&!upcomingT.length&&!todayC.length&&!overdueC.length&&!upcomingC.length) continue;
-      // Build plain-text body
-      const lines=['Hi '+m.name+', here is your digest for today:\n'];
-      const sec=(label,items,kind)=>{if(!items.length)return;lines.push('── '+label+' ──');items.forEach(it=>lines.push('• '+(kind==='comp'?it.name:it.title)+' | Due: '+(it.due||'—')));lines.push('');};
-      sec('Due Today — Tasks',todayT,'task');sec('Overdue — Tasks',overdueT,'task');sec('Upcoming — Tasks',upcomingT,'task');
-      sec('Due Today — Compliance',todayC,'comp');sec('Overdue — Compliance',overdueC,'comp');sec('Upcoming — Compliance',upcomingC,'comp');
-      lines.push('— Ginesysone Finance Task Board');
-      await sendViaGAS(cfg,{
-        to_name:m.name, to_email:m.email,
-        task_title:'[Digest] Daily Summary',
-        task_status:'', task_priority:'', task_due:'',
-        assigned_by:'Ginesysone Finance',
-        context:lines.join('\n')
+      const html=buildDigestHtml(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
+      const plain=buildDigestPlain(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
+      // Use send_html action — passes pre-built HTML directly to GAS
+      await fetch(cfg.gasUrl,{method:'POST',headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({
+          action:'send_html',
+          to_email:m.email,
+          to_name:m.name,
+          subject:'\uD83D\uDCCB Daily Digest — '+dateLabel,
+          html:html,
+          plain:plain,
+          cc_email:(cfg.ccEmail&&cfg.ccEmail!==m.email)?cfg.ccEmail:null
+        })
       });
       sent++;
     }
@@ -3207,13 +3227,30 @@ window.sendManualDigest=async function(){
   }catch(e){toast('⚠ Digest error: '+e.message);}
 };
 
-// ── Toggle digest email preview panel ──
+// ── Toggle digest email preview panel (renders live data) ──
 window.toggleDigestPreview=function(){
   const panel=document.getElementById('digestPreviewPanel');
   const btn=document.getElementById('digestPreviewToggleBtn');
   const open=panel.style.display==='none';
   panel.style.display=open?'block':'none';
-  if(btn) btn.textContent=open?'🙈 Hide Preview':'👁 Preview Email Template';
+  if(btn) btn.textContent=open?'\uD83D\uDE48 Hide Preview':'\uD83D\uDC41 Preview Email Template';
+  if(!open) return;
+  // Render live preview for current user or first member
+  const me=currentUserProfile||members[0];
+  if(!me){document.getElementById('digestPreviewBody').innerHTML='<div style="padding:20px;color:#94A3B8;text-align:center">No member data yet</div>';return;}
+  const today=new Date().toISOString().split('T')[0];
+  const threeDays=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+  const todayT   =tasks.filter(t=>!t.archived&&t.assigneeId===me.id&&t.status!=='done'&&t.due===today);
+  const overdueT =tasks.filter(t=>!t.archived&&t.assigneeId===me.id&&t.status!=='done'&&t.due&&t.due<today);
+  const upcomingT=tasks.filter(t=>!t.archived&&t.assigneeId===me.id&&t.status!=='done'&&t.due&&t.due>today&&t.due<=threeDays);
+  const todayC   =complianceItems.filter(c=>c.assigneeId===me.id&&c.status!=='completed'&&c.due===today);
+  const overdueC =complianceItems.filter(c=>c.assigneeId===me.id&&c.status!=='completed'&&c.due&&c.due<today);
+  const upcomingC=complianceItems.filter(c=>c.assigneeId===me.id&&c.status!=='completed'&&c.due&&c.due>today&&c.due<=threeDays);
+  const html=buildDigestHtml(me.name||'Team Member',todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
+  document.getElementById('digestPreviewBody').innerHTML=html;
+  const now=new Date();
+  const sub=document.getElementById('digestPreviewSubject');
+  if(sub) sub.textContent='Subject: \uD83D\uDCCB Daily Digest — '+now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
 };
 
 // Auto-check digest status when email modal opens
