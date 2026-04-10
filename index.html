@@ -2851,14 +2851,6 @@ window.copyGasScript=function(){
 '        .atHour(10).everyDays(1).inTimezone("Asia/Kolkata").create();',
 '      return _json({success:true, message:"Daily digest enabled! Emails will go out at 10 AM IST on weekdays."});',
 '    }',
-'    if (action === \"send_html\") {',
-'      // Pre-built HTML digest from client — just deliver it',
-'      if (d.to_email) {',
-'        var mailOpts = { to: d.to_email, subject: d.subject || \"Daily Digest\", body: d.plain || \"\", htmlBody: d.html || \"\", cc: d.cc_email||undefined };',
-'        MailApp.sendEmail(mailOpts);',
-'      }',
-'      return _json({success:true});',
-'    }',
 '    if (action === \"disable_digest\") {',
 '      PROPS.deleteProperty("digest_enabled");',
 '      _removeTriggers();',
@@ -2917,7 +2909,13 @@ window.copyGasScript=function(){
 '    +"</div></td></tr></table></td></tr></table>";',
 '    var plain = "Hi "+(d.to_name||"Team")+",\\n\\n"+context+"\\n\\n📌 "+title+"\\n⚡ Priority: "+prio+"\\n📊 Status: "+(status||"Pending")+"\\n📅 Due: "+(d.task_due||"Not set")+"\\n👤 Assigned by: "+(d.assigned_by||"Admin")+"\\n\\n— Ginesysone Finance "+c.label;',
 '    if (d.to_email) {',
-'      MailApp.sendEmail({ to: d.to_email, subject: subject, body: plain, htmlBody: html });',
+'      // If client sent pre-built HTML (digest), use it directly; otherwise use generated notification HTML',
+'      var finalHtml = d.htmlBody || html;',
+'      var finalPlain = d.plainBody || plain;',
+'      var finalSubject = d.subject || subject;',
+'      var sendOpts = { to: d.to_email, subject: finalSubject, body: finalPlain, htmlBody: finalHtml };',
+'      if (d.cc_email) sendOpts.cc = d.cc_email;',
+'      MailApp.sendEmail(sendOpts);',
 '    }',
 '    return _json({success:true});',
 '  } catch(err) {',
@@ -3209,17 +3207,19 @@ window.sendManualDigest=async function(){
       if(!todayT.length&&!overdueT.length&&!upcomingT.length&&!todayC.length&&!overdueC.length&&!upcomingC.length) continue;
       const html=buildDigestHtml(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
       const plain=buildDigestPlain(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
-      // Use send_html action — passes pre-built HTML directly to GAS
-      await fetch(cfg.gasUrl,{method:'POST',headers:{'Content-Type':'text/plain'},
-        body:JSON.stringify({
-          action:'send_html',
-          to_email:m.email,
-          to_name:m.name,
-          subject:'\uD83D\uDCCB Daily Digest — '+dateLabel,
-          html:html,
-          plain:plain,
-          cc_email:(cfg.ccEmail&&cfg.ccEmail!==m.email)?cfg.ccEmail:null
-        })
+      // Pass pre-built htmlBody — GAS uses it directly if present, no redeploy needed
+      await sendViaGAS(cfg,{
+        to_name:m.name,
+        to_email:m.email,
+        task_title:'Daily Digest',
+        task_status:'',
+        task_priority:'',
+        task_due:dateLabel,
+        assigned_by:'Ginesysone Finance',
+        context:'Please view this email in an HTML-capable client.',
+        htmlBody:html,
+        plainBody:plain,
+        subject:'\uD83D\uDCCB Daily Digest \u2014 '+dateLabel
       });
       sent++;
     }
