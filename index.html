@@ -4420,7 +4420,7 @@ async function autoHealRecurring(){
   const now = new Date();
   const pad = n => String(n).padStart(2,'0');
   const currentMonth = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
-  const lad = new Date(now.getFullYear(), now.getMonth()+1, 1);
+  const lad = new Date(now.getFullYear(), now.getMonth()+3, 1);
   const lookAheadMonth = `${lad.getFullYear()}-${pad(lad.getMonth()+1)}`;
   const recurring = complianceItems.filter(c => c.recur);
   for(const c of recurring){
@@ -4712,7 +4712,7 @@ window.openComplianceModal=function(cid){
   document.getElementById('cType').value=c?.type||'';
   document.getElementById('cDue').value=c?.due||'';
   const today=new Date().toISOString().split('T')[0];
-  document.getElementById('cSubmitDate').value=c?.submitDate||today;
+  document.getElementById('cSubmitDate').value=c?.submitDate||'';
   document.getElementById('cFilingDate').value=c?.filingDate||'';
   document.getElementById('cStatus').value=c?.status||'pending';
   document.getElementById('cRemarks').value=c?.remarks||'';
