@@ -1974,13 +1974,67 @@ function doPost(e) {
           Automatically sends <strong>Today's Tasks</strong>, <strong>Overdue Tasks</strong> &amp; <strong>Upcoming Tasks</strong> to every team member at <strong>10:00 AM IST</strong> (Mon-Fri).<br>
           Admin also receives a <strong>full team summary</strong>. Zero manual work required.
         </div>
-        <div id="digestStatusBox" style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
-          <span id="digestStatusIcon" style="font-size:1.3rem">⏸</span>
+        <div id="digestStatusBox" style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+          <span id="digestStatusIcon" style="font-size:1.3rem">&#9208;</span>
           <div style="flex:1">
-            <div id="digestStatusText" style="font-size:.82rem;font-weight:600;color:var(--ink-mid)">Checking status…</div>
+            <div id="digestStatusText" style="font-size:.82rem;font-weight:600;color:var(--ink-mid)">Checking status&#8230;</div>
             <div id="digestStatusSub" style="font-size:.7rem;color:var(--ink-dim);margin-top:2px"></div>
           </div>
           <button id="digestToggleBtn" class="btn btn-primary btn-sm" onclick="toggleDailyDigest()" style="width:auto;display:none">Enable</button>
+        </div>
+
+        <!-- Manual send + preview toggle -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="sendManualDigest()" style="width:auto">&#128232; Send Digest Now</button>
+          <button class="btn btn-ghost btn-sm" id="digestPreviewToggleBtn" onclick="toggleDigestPreview()" style="width:auto">&#128065; Preview Email Template</button>
+        </div>
+
+        <!-- Digest email template preview -->
+        <div id="digestPreviewPanel" style="display:none;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px">
+          <div style="background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace">Email Preview &#8212; Daily Digest</div>
+            <div style="font-size:.7rem;color:var(--ink-dim)">Subject: &#128203; Your Daily Digest &#8212; 10 Apr 2026</div>
+          </div>
+          <div style="background:#F0F2F8;padding:18px 14px;max-height:420px;overflow-y:auto">
+            <div style="max-width:540px;margin:0 auto;font-family:Arial,sans-serif">
+              <div style="background:linear-gradient(135deg,#2056d8,#6d28d9);border-radius:14px 14px 0 0;padding:22px 24px 18px">
+                <div style="font-size:11px;color:rgba(255,255,255,.7);font-weight:700;letter-spacing:.5px">GINESYSONE FINANCE &#183; DAILY DIGEST</div>
+                <div style="font-size:19px;font-weight:800;color:#fff;margin-top:7px">Good Morning, Dilip! &#128075;</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px">Here is your task &amp; compliance summary for today</div>
+              </div>
+              <div style="background:#fff;padding:20px 24px">
+                <div style="margin-bottom:16px">
+                  <div style="font-size:12px;font-weight:700;color:#1D4ED8;padding:7px 11px;background:#EFF6FF;border-radius:7px;margin-bottom:8px">&#128197; Due Today &#8212; Tasks</div>
+                  <table style="width:100%;border:1.5px solid #E5E8F0;border-radius:8px;border-collapse:collapse">
+                    <tr style="background:#fff"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600;border-bottom:1px solid #F1F5F9">GST Reconciliation Report</td><td style="padding:8px 12px;font-size:11px;color:#64748B;border-bottom:1px solid #F1F5F9;white-space:nowrap">&#128197; 10 Apr 2026</td></tr>
+                    <tr style="background:#F8FAFC"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600">TDS Certificate Issuance</td><td style="padding:8px 12px;font-size:11px;color:#64748B;white-space:nowrap">&#128197; 10 Apr 2026</td></tr>
+                  </table>
+                </div>
+                <div style="margin-bottom:16px">
+                  <div style="font-size:12px;font-weight:700;color:#B91C1C;padding:7px 11px;background:#FEF2F2;border-radius:7px;margin-bottom:8px">&#9888;&#65039; Overdue &#8212; Tasks</div>
+                  <table style="width:100%;border:1.5px solid #E5E8F0;border-radius:8px;border-collapse:collapse">
+                    <tr style="background:#fff"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600">Form 16 Preparation</td><td style="padding:8px 12px;font-size:11px;color:#64748B;white-space:nowrap">&#128197; 5 Apr 2026</td></tr>
+                  </table>
+                </div>
+                <div style="margin-bottom:16px">
+                  <div style="font-size:12px;font-weight:700;color:#0369A1;padding:7px 11px;background:#E0F2FE;border-radius:7px;margin-bottom:8px">&#128737; Due Today &#8212; Compliance</div>
+                  <table style="width:100%;border:1.5px solid #E5E8F0;border-radius:8px;border-collapse:collapse">
+                    <tr style="background:#fff"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600">TDS Working</td><td style="padding:8px 12px;font-size:11px;color:#64748B;white-space:nowrap">&#128197; 10 Apr 2026</td></tr>
+                  </table>
+                </div>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:#047857;padding:7px 11px;background:#F0FDF9;border-radius:7px;margin-bottom:8px">&#128198; Upcoming &#8212; Compliance</div>
+                  <table style="width:100%;border:1.5px solid #E5E8F0;border-radius:8px;border-collapse:collapse">
+                    <tr style="background:#fff"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600;border-bottom:1px solid #F1F5F9">GSTR-1</td><td style="padding:8px 12px;font-size:11px;color:#64748B;border-bottom:1px solid #F1F5F9;white-space:nowrap">&#128197; 11 Apr 2026</td></tr>
+                    <tr style="background:#F8FAFC"><td style="padding:8px 12px;font-size:12px;color:#1E293B;font-weight:600">STPI Return</td><td style="padding:8px 12px;font-size:11px;color:#64748B;white-space:nowrap">&#128197; 12 Apr 2026</td></tr>
+                  </table>
+                </div>
+              </div>
+              <div style="background:#fff;border-radius:0 0 14px 14px;padding:0 24px 16px;border-top:1.5px solid #E5E8F0;text-align:center">
+                <div style="padding-top:12px;font-size:11px;color:#94A3B8">Ginesysone Finance Task Board &#183; Automated daily digest &#183; Do not reply</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2805,9 +2859,42 @@ window.openEmailConfig=function(){
 window.closeEmailModal=function(){document.getElementById('emailModal').style.display='none';};
 window.copyGasScript=function(){
   var script = [
+'// ══════════════════════════════════════════════════════════════════',
+'// Ginesysone Finance — Google Apps Script',
+'// Handles: Individual email notifications + Daily Digest',
+'// ══════════════════════════════════════════════════════════════════',
+'',
+'var FIREBASE_URL = "";  // auto-set by setup_digest',
+'var ADMIN_EMAIL  = "";  // auto-set by setup_digest',
+'var PROPS = PropertiesService.getScriptProperties();',
+'',
+'// ── Entry point ──────────────────────────────────────────────────',
 'function doPost(e) {',
 '  try {',
 '    var d = JSON.parse(e.postData.contents);',
+'    var action = d.action || "";',
+'',
+'    if (action === "check_digest") {',
+'      var enabled = !!PROPS.getProperty("digest_enabled");',
+'      var adminEmail = PROPS.getProperty("admin_email") || "";',
+'      return _json({enabled: enabled, adminEmail: adminEmail});',
+'    }',
+'    if (action === "setup_digest") {',
+'      PROPS.setProperty("firebase_url", d.firebaseUrl || "");',
+'      PROPS.setProperty("admin_email",  d.adminEmail  || "");',
+'      PROPS.setProperty("digest_enabled", "1");',
+'      _removeTriggers();',
+'      ScriptApp.newTrigger("sendDailyDigest").timeBased()',
+'        .atHour(10).everyDays(1).inTimezone("Asia/Kolkata").create();',
+'      return _json({success:true, message:"Daily digest enabled! Emails will go out at 10 AM IST on weekdays."});',
+'    }',
+'    if (action === "disable_digest") {',
+'      PROPS.deleteProperty("digest_enabled");',
+'      _removeTriggers();',
+'      return _json({success:true});',
+'    }',
+'',
+'    // ── Individual notification email ──────────────────────────────',
 '    var type = "task", title = d.task_title || "Task Notification";',
 '    if (title.indexOf("[Compliance]") === 0) { type = "compliance"; title = title.replace("[Compliance] ", ""); }',
 '    else if (title.indexOf("[Audit]") === 0) { type = "audit"; title = title.replace("[Audit] ", ""); }',
@@ -2820,7 +2907,7 @@ window.copyGasScript=function(){
 '    var prioColors = {"Critical":{bg:"#FEF2F2",color:"#B91C1C"},"High":{bg:"#FFF7ED",color:"#C2410C"},"Medium":{bg:"#FFFBEB",color:"#B45309"},"Low":{bg:"#ECFDF5",color:"#047857"}};',
 '    var prio = d.task_priority || "Medium";',
 '    var pc = prioColors[prio] || prioColors["Medium"];',
-'    var statusColors = {"To Do":{bg:"#F1F5F9",color:"#475569"},"In Progress":{bg:"#EFF6FF",color:"#1D4ED8"},"In Review":{bg:"#F5F3FF",color:"#6D28D9"},"Done":{bg:"#ECFDF5",color:"#047857"},"Completed":{bg:"#ECFDF5",color:"#047857"},"pending":{bg:"#FFFBEB",color:"#B45309"},"in_progress":{bg:"#EFF6FF",color:"#1D4ED8"},"completed":{bg:"#ECFDF5",color:"#047857"},"overdue":{bg:"#FEF2F2",color:"#B91C1C"},"Not Started":{bg:"#F1F5F9",color:"#475569"},"Gathering":{bg:"#FFFBEB",color:"#B45309"},"Ready":{bg:"#EFF6FF",color:"#1D4ED8"},"Shared":{bg:"#F5F3FF",color:"#6D28D9"},"Query Raised":{bg:"#FEF2F2",color:"#B91C1C"},"Replied":{bg:"#EFF6FF",color:"#1D4ED8"},"Accepted":{bg:"#ECFDF5",color:"#047857"}};',
+'    var statusColors = {"To Do":{bg:"#F1F5F9",color:"#475569"},"In Progress":{bg:"#EFF6FF",color:"#1D4ED8"},"In Review":{bg:"#F5F3FF",color:"#6D28D9"},"Done":{bg:"#ECFDF5",color:"#047857"},"Completed":{bg:"#ECFDF5",color:"#047857"},"pending":{bg:"#FFFBEB",color:"#B45309"},"in_progress":{bg:"#EFF6FF",color:"#1D4ED8"},"completed":{bg:"#ECFDF5",color:"#047857"},"overdue":{bg:"#FEF2F2",color:"#B91C1C"}};',
 '    var status = d.task_status || "";',
 '    var sc = statusColors[status] || {bg:"#F1F5F9",color:"#475569"};',
 '    var context = d.context || "You have a task update.";',
@@ -2836,9 +2923,9 @@ window.copyGasScript=function(){
 '    var si = type==="compliance"?"🛡":type==="audit"?"📋":"📌";',
 '    var subject = si+" "+title;',
 '    if(isReminder) subject="⏰ Reminder: "+title;',
-'    if(isOverdue) subject="🚨 Overdue: "+title;',
+'    if(isOverdue)  subject="🚨 Overdue: "+title;',
 '    if(isComplete) subject="✅ Completed: "+title;',
-'    if(isQuery) subject="❓ Query: "+title;',
+'    if(isQuery)    subject="❓ Query: "+title;',
 '    var html = "<table width=\\"100%\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"background:#F0F2F8;padding:32px 16px;font-family:Arial,sans-serif\\"><tr><td align=\\"center\\">"',
 '    +"<table width=\\"560\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"max-width:560px;width:100%\\">"',
 '    +"<tr><td style=\\"background:"+c.accent+";border-radius:16px 16px 0 0;padding:28px 32px 22px\\">"',
@@ -2856,20 +2943,165 @@ window.copyGasScript=function(){
 '    +"<tr><td style=\\"background:#fff;border-radius:0 0 16px 16px;padding:8px 32px 28px\\"><div style=\\"border-top:1.5px solid #E5E8F0;padding-top:16px;text-align:center\\">"',
 '    +"<div style=\\"font-size:12px;color:#94A3B8\\">Sent from <strong style=\\"color:#64748B\\">Ginesysone Finance "+c.label+"</strong></div>"',
 '    +"<div style=\\"font-size:11px;color:#CBD5E1;margin-top:4px\\">Automated notification · Do not reply</div>"',
-'    +"</div></td></tr>"',
-'    +"</table></td></tr></table>";',
-'    var plain = "Hi "+(d.to_name||"Team")+",\\n\\n"+context+"\\n\\n📌 Task: "+title+"\\n⚡ Priority: "+prio+"\\n📊 Status: "+(status||"Pending")+"\\n📅 Due: "+(d.task_due||"Not set")+"\\n👤 Assigned by: "+(d.assigned_by||"Admin")+"\\n\\n— Ginesysone Finance "+c.label;',
+'    +"</div></td></tr></table></td></tr></table>";',
+'    var plain = "Hi "+(d.to_name||"Team")+",\\n\\n"+context+"\\n\\n📌 "+title+"\\n⚡ Priority: "+prio+"\\n📊 Status: "+(status||"Pending")+"\\n📅 Due: "+(d.task_due||"Not set")+"\\n👤 Assigned by: "+(d.assigned_by||"Admin")+"\\n\\n— Ginesysone Finance "+c.label;',
 '    if (d.to_email) {',
-'      MailApp.sendEmail({ to:d.to_email, subject:subject, body:plain, htmlBody:html });',
+'      MailApp.sendEmail({ to: d.to_email, subject: subject, body: plain, htmlBody: html });',
 '    }',
-'    return ContentService.createTextOutput(JSON.stringify({success:true})).setMimeType(ContentService.MimeType.JSON);',
+'    return _json({success:true});',
 '  } catch(err) {',
-'    return ContentService.createTextOutput(JSON.stringify({success:false,error:err.message})).setMimeType(ContentService.MimeType.JSON);',
+'    return _json({success:false, error:err.message});',
 '  }',
 '}',
-'function _esc(s){return s?s.toString().replace(/&/g,"\\&amp;").replace(/</g,"\\&lt;").replace(/>/g,"\\&gt;"):"";}'
+'',
+'// ── Daily Digest (triggered at 10 AM IST, Mon-Fri) ───────────────',
+'function sendDailyDigest() {',
+'  var fbUrl  = PROPS.getProperty("firebase_url");',
+'  var adminE = PROPS.getProperty("admin_email") || "";',
+'  if (!fbUrl || !PROPS.getProperty("digest_enabled")) return;',
+'',
+'  // Skip weekends',
+'  var now = new Date();',
+'  var day = now.getDay(); // 0=Sun,6=Sat',
+'  if (day === 0 || day === 6) return;',
+'',
+'  var today = Utilities.formatDate(now, "Asia/Kolkata", "yyyy-MM-dd");',
+'  var threeDays = new Date(now.getTime() + 3*24*60*60*1000);',
+'  var soonDate  = Utilities.formatDate(threeDays, "Asia/Kolkata", "yyyy-MM-dd");',
+'',
+'  // Fetch members + tasks + compliance from Firebase',
+'  var members    = _fbGet(fbUrl + "/members.json");',
+'  var tasksData  = _fbGet(fbUrl + "/tasks.json");',
+'  var compData   = _fbGet(fbUrl + "/compliance.json");',
+'  if (!members) return;',
+'',
+'  // Build per-member digest',
+'  for (var uid in members) {',
+'    var m = members[uid];',
+'    if (!m || !m.email) continue;',
+'',
+'    // ── Tasks ──',
+'    var todayTasks    = [], pendingTasks = [], upcomingTasks = [];',
+'    if (tasksData) {',
+'      for (var tid in tasksData) {',
+'        var t = tasksData[tid];',
+'        if (!t || t.archived || t.assigneeId !== uid) continue;',
+'        if (t.status === "done") continue;',
+'        if (t.due === today) todayTasks.push(t);',
+'        else if (t.due && t.due < today && t.status !== "done") pendingTasks.push(t);',
+'        else if (t.due && t.due > today && t.due <= soonDate) upcomingTasks.push(t);',
+'      }',
+'    }',
+'',
+'    // ── Compliance ──',
+'    var todayComp = [], overdueComp = [], upcomingComp = [];',
+'    if (compData) {',
+'      for (var cid in compData) {',
+'        var c = compData[cid];',
+'        if (!c || c.assigneeId !== uid) continue;',
+'        if (c.status === "completed") continue;',
+'        if (c.due === today) todayComp.push(c);',
+'        else if (c.due && c.due < today) overdueComp.push(c);',
+'        else if (c.due && c.due > today && c.due <= soonDate) upcomingComp.push(c);',
+'      }',
+'    }',
+'',
+'    // Skip if nothing to report',
+'    if (!todayTasks.length && !pendingTasks.length && !upcomingTasks.length &&',
+'        !todayComp.length  && !overdueComp.length  && !upcomingComp.length) continue;',
+'',
+'    var subject = "📋 Your Daily Digest — " + Utilities.formatDate(now,"Asia/Kolkata","d MMM yyyy");',
+'    var html = _digestHtml(m.name || "Team Member", today, todayTasks, pendingTasks, upcomingTasks, todayComp, overdueComp, upcomingComp);',
+'    var plain = _digestPlain(m.name || "Team Member", todayTasks, pendingTasks, upcomingTasks, todayComp, overdueComp, upcomingComp);',
+'    try {',
+'      var mailOpts = { to: m.email, subject: subject, body: plain, htmlBody: html };',
+'      if (adminE && adminE !== m.email) mailOpts.cc = adminE;',
+'      MailApp.sendEmail(mailOpts);',
+'    } catch(e) { Logger.log("Digest email failed for "+m.email+": "+e.message); }',
+'  }',
+'}',
+'',
+'// ── HTML digest builder ──────────────────────────────────────────',
+'function _digestHtml(name, today, todayT, pendingT, upcomingT, todayC, overdueC, upcomingC) {',
+'  var h = "<table width=\\"100%\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"background:#F0F2F8;padding:32px 16px;font-family:Arial,sans-serif\\"><tr><td align=\\"center\\">"',
+'    + "<table width=\\"600\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"max-width:600px;width:100%\\">"',
+'    // Header',
+'    + "<tr><td style=\\"background:linear-gradient(135deg,#2056d8,#6d28d9);border-radius:16px 16px 0 0;padding:28px 32px 22px\\">"',
+'    + "<div style=\\"font-size:13px;font-weight:700;color:rgba(255,255,255,.75)\\">Ginesysone Finance · Daily Digest</div>"',
+'    + "<div style=\\"margin-top:8px;font-size:24px;font-weight:800;color:#fff\\">Good Morning, "+_esc(name)+"! 👋</div>"',
+'    + "<div style=\\"margin-top:6px;font-size:13px;color:rgba(255,255,255,.75)\\">Here is your task summary for today</div>"',
+'    + "</td></tr>"',
+'    // Body',
+'    + "<tr><td style=\\"background:#fff;padding:28px 32px\\">";',
+'',
+'  // Task sections',
+'  if (todayT.length)    h += _sectionHtml("📅 Due Today — Tasks", todayT, "#EFF6FF","#1D4ED8","task");',
+'  if (pendingT.length)  h += _sectionHtml("⚠️ Overdue — Tasks",  pendingT, "#FEF2F2","#B91C1C","task");',
+'  if (upcomingT.length) h += _sectionHtml("🔜 Coming Up — Tasks",upcomingT,"#F5F3FF","#6D28D9","task");',
+'  // Compliance sections',
+'  if (todayC.length)    h += _sectionHtml("🛡 Due Today — Compliance",    todayC,   "#E0F2FE","#0369A1","compliance");',
+'  if (overdueC.length)  h += _sectionHtml("🚨 Overdue — Compliance",      overdueC, "#FEF2F2","#B91C1C","compliance");',
+'  if (upcomingC.length) h += _sectionHtml("📆 Upcoming — Compliance",     upcomingC,"#F0FDF9","#047857","compliance");',
+'',
+'  h += "</td></tr>"',
+'    + "<tr><td style=\\"background:#fff;border-radius:0 0 16px 16px;padding:0 32px 24px\\"><div style=\\"border-top:1.5px solid #E5E8F0;padding-top:16px;text-align:center\\">"',
+'    + "<div style=\\"font-size:12px;color:#94A3B8\\">Ginesysone Finance Task Board · Automated daily digest</div>"',
+'    + "<div style=\\"font-size:11px;color:#CBD5E1;margin-top:4px\\">Do not reply to this email</div>"',
+'    + "</div></td></tr></table></td></tr></table>";',
+'  return h;',
+'}',
+'',
+'function _sectionHtml(title, items, bg, color, kind) {',
+'  var h = "<div style=\\"margin-bottom:20px\\">"',
+'    + "<div style=\\"font-size:13px;font-weight:700;color:"+color+";margin-bottom:10px;padding:8px 12px;background:"+bg+";border-radius:8px\\">"+title+"</div>"',
+'    + "<table width=\\"100%\\" style=\\"border:1.5px solid #E5E8F0;border-radius:10px;border-collapse:collapse;overflow:hidden\\">";',
+'  for (var i=0; i<items.length; i++) {',
+'    var it = items[i];',
+'    var itTitle = kind==="compliance" ? (it.name||"—") : (it.title||"—");',
+'    var itDue   = it.due || "—";',
+'    var rowBg   = i%2===0 ? "#fff" : "#F8FAFC";',
+'    h += "<tr style=\\"background:"+rowBg+"\\">"',
+'      + "<td style=\\"padding:10px 14px;font-size:13px;color:#1E293B;font-weight:600;border-bottom:1px solid #F1F5F9\\">"+_esc(itTitle)+"</td>"',
+'      + "<td style=\\"padding:10px 14px;font-size:12px;color:#64748B;border-bottom:1px solid #F1F5F9;white-space:nowrap\\">📅 "+_esc(itDue)+"</td></tr>";',
+'  }',
+'  h += "</table></div>";',
+'  return h;',
+'}',
+'',
+'function _digestPlain(name, todayT, pendingT, upcomingT, todayC, overdueC, upcomingC) {',
+'  var lines = ["Hi "+name+", here is your daily digest:\\n"];',
+'  var _sec = function(label, items, kind) {',
+'    if (!items.length) return;',
+'    lines.push("── "+label+" ──");',
+'    items.forEach(function(it){ lines.push("• "+(kind==="compliance"?it.name:it.title)+" | Due: "+(it.due||"—")); });',
+'    lines.push("");',
+'  };',
+'  _sec("Due Today — Tasks",     todayT,   "task");',
+'  _sec("Overdue — Tasks",       pendingT, "task");',
+'  _sec("Upcoming — Tasks",      upcomingT,"task");',
+'  _sec("Due Today — Compliance",todayC,   "compliance");',
+'  _sec("Overdue — Compliance",  overdueC, "compliance");',
+'  _sec("Upcoming — Compliance", upcomingC,"compliance");',
+'  lines.push("— Ginesysone Finance Task Board");',
+'  return lines.join("\\n");',
+'}',
+'',
+'// ── Helpers ──────────────────────────────────────────────────────',
+'function _fbGet(url) {',
+'  try {',
+'    var r = UrlFetchApp.fetch(url, {muteHttpExceptions:true});',
+'    return JSON.parse(r.getContentText());',
+'  } catch(e) { return null; }',
+'}',
+'function _removeTriggers() {',
+'  ScriptApp.getProjectTriggers().forEach(function(t){ ScriptApp.deleteTrigger(t); });',
+'}',
+'function _json(obj) {',
+'  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);',
+'}',
+'function _esc(s) { return s?s.toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"):""; }'
   ].join('\n');
-  navigator.clipboard.writeText(script).then(()=>toast('✅ Full script copied to clipboard!')).catch(()=>toast('⚠ Copy failed — try manually'));
+  navigator.clipboard.writeText(script).then(()=>toast('✅ Full GAS script (with Daily Digest) copied!')).catch(()=>toast('⚠ Copy failed — try manually'));
 };
 window.saveEmailConfig=function(){
   const gasUrl=document.getElementById('gas_url').value.trim();
@@ -2933,6 +3165,57 @@ window.toggleDailyDigest=async function(){
   }catch(e){toast('⚠ Error: '+e.message);}
   btn.disabled=false;
 };
+// ── Manual digest send ──
+window.sendManualDigest=async function(){
+  const cfg=getEmailConfig();
+  if(!cfg||!cfg.gasUrl){toast('⚠ Save your GAS URL first.');return;}
+  if(!isAdmin()){toast('Only admins can send the digest.');return;}
+  if(!confirm('Send the daily digest email to all team members right now?')) return;
+  const btn=document.getElementById('digestToggleBtn');
+  toast('📨 Sending digest to all members…');
+  try{
+    const today=new Date().toISOString().split('T')[0];
+    const threeDays=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+    let sent=0;
+    for(const m of members){
+      if(!m.email) continue;
+      // Tasks for this member
+      const todayT   =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due===today);
+      const overdueT =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due<today);
+      const upcomingT=tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due>today&&t.due<=threeDays);
+      // Compliance for this member
+      const todayC   =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due===today);
+      const overdueC =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due<today);
+      const upcomingC=complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due>today&&c.due<=threeDays);
+      if(!todayT.length&&!overdueT.length&&!upcomingT.length&&!todayC.length&&!overdueC.length&&!upcomingC.length) continue;
+      // Build plain-text body
+      const lines=['Hi '+m.name+', here is your digest for today:\n'];
+      const sec=(label,items,kind)=>{if(!items.length)return;lines.push('── '+label+' ──');items.forEach(it=>lines.push('• '+(kind==='comp'?it.name:it.title)+' | Due: '+(it.due||'—')));lines.push('');};
+      sec('Due Today — Tasks',todayT,'task');sec('Overdue — Tasks',overdueT,'task');sec('Upcoming — Tasks',upcomingT,'task');
+      sec('Due Today — Compliance',todayC,'comp');sec('Overdue — Compliance',overdueC,'comp');sec('Upcoming — Compliance',upcomingC,'comp');
+      lines.push('— Ginesysone Finance Task Board');
+      await sendViaGAS(cfg,{
+        to_name:m.name, to_email:m.email,
+        task_title:'[Digest] Daily Summary',
+        task_status:'', task_priority:'', task_due:'',
+        assigned_by:'Ginesysone Finance',
+        context:lines.join('\n')
+      });
+      sent++;
+    }
+    toast('✅ Digest sent to '+sent+' member'+(sent!==1?'s':'')+'!');
+  }catch(e){toast('⚠ Digest error: '+e.message);}
+};
+
+// ── Toggle digest email preview panel ──
+window.toggleDigestPreview=function(){
+  const panel=document.getElementById('digestPreviewPanel');
+  const btn=document.getElementById('digestPreviewToggleBtn');
+  const open=panel.style.display==='none';
+  panel.style.display=open?'block':'none';
+  if(btn) btn.textContent=open?'🙈 Hide Preview':'👁 Preview Email Template';
+};
+
 // Auto-check digest status when email modal opens
 const _origOpenEmailConfig=window.openEmailConfig;
 window.openEmailConfig=function(){
@@ -4086,7 +4369,45 @@ function subscribeCompliance(){
         update(ref(db,`compliance/${c.id}`),{status:'overdue'});
     });
     if(currentView==='compliance') renderCompliance();
+    // ── AUTO-HEAL: spawn any missing recurring cycles ──
+    autoHealRecurring();
   });
+}
+
+/* ── Auto-heal: generate upcoming recurring compliance cycles based on calendar date.
+   Does NOT require an item to be "completed" — as long as the next cycle's month has
+   arrived (or is 1 month ahead), it is created automatically on every data load.
+   Safe to call many times — duplicate guard prevents double-creation. */
+async function autoHealRecurring(){
+  if(!isAdmin()) return;
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const currentMonth = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+  const lad = new Date(now.getFullYear(), now.getMonth()+1, 1);
+  const lookAheadMonth = `${lad.getFullYear()}-${pad(lad.getMonth()+1)}`;
+  const recurring = complianceItems.filter(c => c.recur);
+  for(const c of recurring){
+    const nextMonth = nextComplianceMonth(c.month, c.recur);
+    // Only spawn if the next cycle is current month or next month (not far future)
+    if(nextMonth > lookAheadMonth) continue;
+    const exists = complianceItems.some(x =>
+      x.name === c.name && x.month === nextMonth && x.recur === c.recur
+    );
+    if(exists) continue;
+    const newId = uid();
+    const nextDue = nextDueDate(c.due, c.recur);
+    const _am = c.assigneeId ? members.find(m => m.id === c.assigneeId) : null;
+    await set(ref(db, `compliance/${newId}`), {
+      name: c.name, month: nextMonth, type: c.type,
+      due: nextDue, status: 'pending', recur: c.recur,
+      remarks: '', createdBy: c.createdBy || null,
+      assigneeId: c.assigneeId || null,
+      assigneeName: _am?.name || c.assigneeName || null,
+      submitDate: null, filingDate: null, taskId: null,
+      ts: Date.now(), updatedAt: Date.now(), id: newId,
+      spawnedFrom: c.id
+    });
+  }
 }
 
 /* ── next-cycle date helpers ── */
