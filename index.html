@@ -3198,17 +3198,6 @@ window.sendManualDigest=async function(){
   const cfg=getEmailConfig();
   if(!cfg||!cfg.gasUrl){toast('Save your GAS URL first.');return;}
   if(!isAdmin()){toast('Only admins can send the digest.');return;}
-  // Check if GAS supports digest action
-  let gasSupportsDigest=false;
-  try{
-    const pr=await fetch(cfg.gasUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'ping'})});
-    const pd=await pr.json();
-    gasSupportsDigest=!!pd.digest;
-  }catch(e){}
-  if(!gasSupportsDigest){
-    alert('Your GAS script needs to be updated to send digest emails.\n\nSteps:\n1. Email Settings -> Copy GAS Script\n2. Go to script.google.com -> paste -> Save\n3. Deploy -> Manage Deployments -> Edit (pencil) -> New Version -> Deploy\n4. Come back and try again.');
-    return;
-  }
   if(!confirm('Send daily digest email to all team members now?'))return;
   toast('Sending digest...');
   try{
