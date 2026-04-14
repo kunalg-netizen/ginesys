@@ -5217,11 +5217,19 @@ echo Creating handler script...
 echo Set a = WScript.Arguments
 echo If a.Count ^> 0 Then
 echo   p = a(0^)
+echo   p = Replace(p, "openfolder:///", ""^)
 echo   p = Replace(p, "openfolder://", ""^)
-echo   p = Replace(p, "%%%%20", " "^)
-echo   If Left(p,1^) = """" Then p = Mid(p,2^)
-echo   If Right(p,1^) = """" Then p = Left(p,Len(p^)-1^)
-echo   If Right(p,1^) = "/" Then p = Left(p,Len(p^)-1^)
+echo   p = Replace(p, "%%20", " "^)
+echo   p = Replace(p, "%%28", Chr(40^)^)
+echo   p = Replace(p, "%%29", Chr(41^)^)
+echo   p = Replace(p, "%%26", "&"^)
+echo   p = Replace(p, "%%2B", "+"^)
+echo   p = Replace(p, "%%2C", ","^)
+echo   p = Replace(p, "/", Chr(92^)^)
+echo   If Left(p,1^) = Chr(34^) Then p = Mid(p,2^)
+echo   If Right(p,1^) = Chr(34^) Then p = Left(p,Len(p^)-1^)
+echo   If Left(p,1^) = Chr(92^) Then p = Mid(p,2^)
+echo   If Right(p,1^) = Chr(92^) Then p = Left(p,Len(p^)-1^)
 echo   CreateObject("WScript.Shell"^).Run "explorer.exe """ ^& p ^& """"
 echo End If
 ) > "%USERPROFILE%\\openfolder.vbs"
