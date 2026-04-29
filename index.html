@@ -3246,16 +3246,18 @@ window.sendManualDigest=async function(){
     let sent=0;
     for(const m of members){
       if(!m.email)continue;
-      const todayT   =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due===today);
-      const noDueT   =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&!t.due);
-      const overdueT =[...tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due<today),...noDueT];
-      const upcomingT=tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due>today&&t.due<=soon);
+      // Exclude personal tasks (source==='personal') from digest
+      const teamTasks=tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&(t.source||'team')!=='personal');
+      const todayT   =teamTasks.filter(t=>t.due===today);
+      const noDueT   =teamTasks.filter(t=>!t.due);
+      const overdueT =[...teamTasks.filter(t=>t.due&&t.due<today),...noDueT];
+      const upcomingT=teamTasks.filter(t=>t.due&&t.due>today&&t.due<=soon);
       // Compliance items
       const todayC   =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due===today);
       const overdueC =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due<today);
       const upcomingC=complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due>today&&c.due<=soon);
       // Audit items (auditSubs with dueDate field)
-      const mAudit=(typeof auditSubs!=='undefined'?auditSubs:[]).filter(a=>a.assigneeId===m.id&&a.done!==true).map(a=>({...a,due:a.dueDate,name:a.subTask||a.mainTask||'Audit Task'}));
+      const mAudit=(typeof auditSubs!=='undefined'?auditSubs:[]).filter(a=>a.assigneeId===m.id&&normaliseAuditStatus(a.status)!=='done'&&a.done!==true).map(a=>({...a,due:a.dueDate,name:a.subTask||a.mainTask||'Audit Task'}));
       const todayA   =mAudit.filter(a=>a.due===today);
       const overdueA =[...mAudit.filter(a=>a.due&&a.due<today),...mAudit.filter(a=>!a.due)];
       const upcomingA=mAudit.filter(a=>a.due&&a.due>today&&a.due<=soon);
