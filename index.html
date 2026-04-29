@@ -1809,6 +1809,10 @@ select option{background:var(--white);color:var(--ink)}
         <div class="fg">
           <label>Due Date</label>
           <input class="input" type="date" id="tDue">
+          <div id="smartDueSuggest" style="display:none;margin-top:6px;padding:8px 12px;background:#e8f5e9;border-radius:6px;font-size:12px;color:#2e7d32;cursor:pointer;border:1px solid #c8e6c9">
+            <span id="smartDueText"></span>
+            <span style="margin-left:8px;font-weight:600;color:#1b5e20" onclick="applySmartDue()">Apply suggestion</span>
+          </div>
         </div>
         <div class="fg">
           <label>Estimated Time (hrs)</label>
@@ -3779,13 +3783,28 @@ window.qu=async function(tid,field,val){
 };
 window.postComment=async function(tid){
   const inp=document.getElementById('ci');const body=inp?.value?.trim();if(!body)return;
-  // detect @mentions and send notifs
   const mentions=body.match(/@(\w+)/g)||[];
   await push(ref(db,`tasks/${tid}/comments`),{authorId:currentUser.uid,body,ts:Date.now(),reactions:{}});
   await log(tid,currentUser.uid,`Commented: "${body.slice(0,60)}"`);
   // notify watchers
   const t=tasks.find(x=>x.id===tid);
   if(t&&t.watchers){t.watchers.filter(w=>w!==currentUser.uid).forEach(w=>{const m=members.find(x=>x.id===w);if(m)toast(`🔔 ${m.name} was notified`);});}
+  // ── NEW: Send email notification to assignee via GAS ──
+  try {
+    const cfg=getEmailConfig();
+    if(cfg&&cfg.gasUrl&&t&&t.assigneeId&&t.assigneeId!==currentUser?.uid){
+      const assignee=members.find(m=>m.id===t.assigneeId);
+      const commenter=members.find(m=>m.id===currentUser?.uid)||{name:'Someone'};
+      if(assignee?.email){
+        fetch(cfg.gasUrl,{method:'POST',headers:{'Content-Type':'text/plain'},
+          body:JSON.stringify({action:'comment_notification',
+            taskTitle:t.title,taskId:tid,
+            commenterName:commenter.name,commentText:body,
+            assigneeEmail:assignee.email,assigneeName:assignee.name})});
+        toast(`📧 ${assignee.name} notified by email`);
+      }
+    }
+  } catch(e){ console.warn('Comment notification failed:',e); }
 };
 window.delComment=async function(tid,cid){await remove(ref(db,`tasks/${tid}/comments/${cid}`));};
 window.deleteTask=async function(tid){
@@ -6514,6 +6533,60 @@ window.removeMember=async function(uid,name){
 window.claimAdminRole = function(){ toast('Admin role can only be assigned by an existing admin from the Team page.'); };
 
 
+
+// ── FEATURE 7: Smart Due Date Suggestions ────────────────────────────────
+const SMART_DUE_RULES = [
+  { keywords: ['gst','gst return','gstr'], day: 20, label: 'GST returns are due on 20th' },
+  { keywords: ['tds','tds payment','tds deposit'], day: 7, label: 'TDS payment due 7th of next month' },
+  { keywords: ['salary','payroll','pay slip','payslip'], day: 5, label: 'Salary processing due on 5th' },
+  { keywords: ['pf','provident fund','epf'], day: 15, label: 'PF due on 15th of month' },
+  { keywords: ['pt','professional tax'], day: 15, label: 'Professional Tax due on 15th' },
+  { keywords: ['esic'], day: 15, label: 'ESIC payment due on 15th' },
+  { keywords: ['advance tax'], day: 15, label: 'Advance tax due dates: 15th Jun/Sep/Dec/Mar' },
+  { keywords: ['mca','roc','annual return'], day: 30, label: 'MCA filing due on 30th' },
+];
+
+function suggestSmartDue() {
+  const title = (document.getElementById('tTitle')?.value || '').toLowerCase();
+  const dueDateEl = document.getElementById('tDue');
+  const suggestEl = document.getElementById('smartDueSuggest');
+  const suggestText = document.getElementById('smartDueText');
+  if (!title || dueDateEl?.value) { if(suggestEl) suggestEl.style.display='none'; return; }
+  const now = new Date();
+  for (const rule of SMART_DUE_RULES) {
+    if (rule.keywords.some(k => title.includes(k))) {
+      const suggested = new Date(now.getFullYear(), now.getMonth() + (now.getDate() > rule.day ? 1 : 0), rule.day);
+      const dateStr = suggested.toISOString().split('T')[0];
+      if (suggestEl && suggestText) {
+        suggestText.textContent = rule.label + ' → ' + suggested.toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+        suggestEl.dataset.date = dateStr;
+        suggestEl.style.display = 'block';
+      }
+      return;
+    }
+  }
+  if (suggestEl) suggestEl.style.display = 'none';
+}
+
+function applySmartDue() {
+  const suggestEl = document.getElementById('smartDueSuggest');
+  const dueDateEl = document.getElementById('tDue');
+  if (suggestEl?.dataset.date && dueDateEl) {
+    dueDateEl.value = suggestEl.dataset.date;
+    suggestEl.style.display = 'none';
+    toast('Smart due date applied!');
+  }
+}
+
+// Hook into title input
+document.addEventListener('DOMContentLoaded', () => {
+  const tTitle = document.getElementById('tTitle');
+  if (tTitle) {
+    tTitle.addEventListener('input', suggestSmartDue);
+    tTitle.addEventListener('blur', suggestSmartDue);
+  }
+});
+// ── End Smart Due Date ────────────────────────────────────────────────────
 </script>
 
 <!-- ── TOAST CONTAINER (was missing — caused every toast() call to crash silently) ── -->
