@@ -3151,43 +3151,79 @@ window.toggleDailyDigest=async function(){
 // ── Build digest HTML (shared by preview and send) ──
 function buildDigestHtml(name, todayT, overdueT, upcomingT, todayC, overdueC, upcomingC){
   const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';
-  const fmtDate=d=>{if(!d)return'—';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});};
-  const sec=(title,items,bg,color,kind)=>{
-    if(!items.length)return'';
-    let rows=items.map((it,i)=>{
-      const nm=kind==='comp'?it.name:it.title;
-      return '<tr style="background:'+(i%2===0?'#fff':'#F8FAFC')+'">'
-        +'<td style="padding:9px 14px;font-size:13px;color:#1E293B;font-weight:600;border-bottom:1px solid #F1F5F9;width:70%">'+esc(nm)+'</td>'
-        +'<td style="padding:9px 14px;font-size:12px;color:#64748B;border-bottom:1px solid #F1F5F9;white-space:nowrap;text-align:right">&#128197; '+esc(fmtDate(it.due))+'</td>'
-        +'</tr>';
-    }).join('');
-    return '<div style="margin-bottom:18px">'
-      +'<div style="font-size:12px;font-weight:700;color:'+color+';padding:7px 12px;background:'+bg+';border-radius:7px;margin-bottom:8px">'+title+'</div>'
-      +'<table width="100%" style="border:1.5px solid #E5E8F0;border-radius:9px;border-collapse:collapse;overflow:hidden">'+rows+'</table>'
-      +'</div>';
-  };
+  const fmtDate=d=>{if(!d)return'';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short'});};
   const now=new Date();
-  const dateLabel=now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
-  let body='';
-  body+=sec('&#128197; Due Today — Tasks',     todayT,   '#EFF6FF','#1D4ED8','task');
-  body+=sec('&#9888;&#65039; Overdue — Tasks',  overdueT, '#FEF2F2','#B91C1C','task');
-  body+=sec('&#128252; Upcoming (3 days) — Tasks',upcomingT,'#F5F3FF','#6D28D9','task');
-  body+=sec('&#128737; Due Today — Compliance', todayC,   '#E0F2FE','#0369A1','comp');
-  body+=sec('&#128680; Overdue — Compliance',   overdueC, '#FEF2F2','#B91C1C','comp');
-  body+=sec('&#128198; Upcoming — Compliance',  upcomingC,'#F0FDF9','#047857','comp');
-  return '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F0F2F8;padding:28px 14px;font-family:Arial,sans-serif"><tr><td align="center">'
-    +'<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%">'
-    +'<tr><td style="background:linear-gradient(135deg,#2056d8,#6d28d9);border-radius:14px 14px 0 0;padding:24px 28px 20px">'
-    +'<div style="font-size:11px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.5px">GINESYSONE FINANCE &middot; DAILY DIGEST</div>'
-    +'<div style="font-size:20px;font-weight:800;color:#fff;margin-top:8px">Good Morning, '+esc(name)+'! &#128075;</div>'
-    +'<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:5px">Task &amp; compliance summary &mdash; '+dateLabel+'</div>'
-    +'</td></tr>'
-    +'<tr><td style="background:#fff;padding:22px 24px">'+body+'</td></tr>'
-    +'<tr><td style="background:#fff;border-radius:0 0 14px 14px;border-top:1.5px solid #E5E8F0;padding:0 24px 18px;text-align:center">'
-    +'<div style="padding-top:12px;font-size:11px;color:#94A3B8">Ginesysone Finance Task Board &middot; Daily digest &middot; Do not reply</div>'
-    +'</td></tr></table></td></tr></table>';
-}
+  const dateLabel=now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
 
+  // Include audit subs assigned to this member
+  const memberAuditSubs=(typeof auditSubs!=='undefined'?auditSubs:[]).filter(s=>s.assigneeId===todayT[0]?.assigneeId||s.assigneeId===todayC[0]?.assigneeId);
+  const today=new Date().toISOString().split('T')[0];
+  const soon=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+
+  const buildList=(items,kind)=>{
+    if(!items||!items.length) return '<div style="padding:8px 12px;color:#80868b;font-size:12px;font-style:italic">—</div>';
+    return items.map(it=>{
+      const nm=kind==='task'?(it.title||it.name||'Task'):(it.name||it.subTask||it.title||'Item');
+      const due=fmtDate(it.due||it.dueDate);
+      return '<div style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#202124">'
+        +'<div style="font-weight:500">'+esc(nm)+'</div>'
+        +(due?'<div style="font-size:11px;color:#5f6368;margin-top:2px">'+due+'</div>':'')
+        +'</div>';
+    }).join('');
+  };
+
+  const col=(title,tHTML,cHTML,bgColor)=>
+    '<td style="padding:0 6px;vertical-align:top;width:33.33%">'
+    +'<div style="background:#fff;border-radius:8px;border:1px solid #dadce0;overflow:hidden">'
+    +'<div style="background:'+bgColor+';color:white;padding:12px;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.5px">'+title+'</div>'
+    +'<div style="border-bottom:1px solid #f0f0f0">'
+    +'<div style="padding:8px 12px;background:#f8f9fa;font-size:11px;font-weight:600;color:#202124;text-transform:uppercase">Tasks</div>'
+    +tHTML+'</div>'
+    +'<div>'
+    +'<div style="padding:8px 12px;background:#f8f9fa;font-size:11px;font-weight:600;color:#202124;text-transform:uppercase">Compliance & Audit</div>'
+    +cHTML+'</div>'
+    +'</div></td>';
+
+  const totalOverdue=overdueT.length+overdueC.length;
+  const totalToday=todayT.length+todayC.length;
+  const totalUpcoming=upcomingT.length+upcomingC.length;
+
+  const stat=(label,val,color)=>
+    '<td style="text-align:center;padding:12px;background:#f8f9fa;border-radius:8px;border-left:4px solid '+color+'">'
+    +'<div style="font-size:22px;font-weight:600;color:'+color+'">'+val+'</div>'
+    +'<div style="font-size:11px;color:#5f6368;margin-top:4px">'+label+'</div>'
+    +'</td>';
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+    +'<body style="background:#f8f9fa;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica Neue,sans-serif">'
+    +'<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;padding:24px 0"><tr><td align="center">'
+    +'<table width="900" cellpadding="0" cellspacing="0" style="max-width:900px;width:100%;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.12)">'
+    +'<tr><td style="background:linear-gradient(135deg,#1f73e6 0%,#1557b0 100%);padding:32px 24px;border-radius:8px 8px 0 0">'
+    +'<div style="font-size:12px;color:rgba(255,255,255,0.85);font-weight:500;letter-spacing:0.5px;margin-bottom:8px">GINESYSONE FINANCE - DAILY DIGEST</div>'
+    +'<div style="font-size:28px;font-weight:300;color:#fff;margin:0">Good Morning, '+esc(name)+'!</div>'
+    +'<div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:8px">Your daily task & compliance summary</div>'
+    +'<div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px">'+dateLabel+'</div>'
+    +'</td></tr>'
+    +'<tr><td style="padding:24px;border-bottom:1px solid #e8eaed">'
+    +'<table width="100%" cellpadding="6" cellspacing="0"><tr>'
+    +stat('Overdue',totalOverdue,'#ea4335')
+    +'<td width="12"></td>'
+    +stat('Due Today',totalToday,'#1f73e6')
+    +'<td width="12"></td>'
+    +stat('Upcoming',totalUpcoming,'#34a853')
+    +'</tr></table></td></tr>'
+    +'<tr><td style="padding:24px">'
+    +'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+    +col('Overdue',  buildList(overdueT,'task'),  buildList(overdueC,'comp'),  '#ea4335')
+    +col('Due Today',buildList(todayT,'task'),    buildList(todayC,'comp'),    '#1f73e6')
+    +col('Upcoming', buildList(upcomingT,'task'), buildList(upcomingC,'comp'), '#34a853')
+    +'</tr></table></td></tr>'
+    +'<tr><td style="border-top:1px solid #e8eaed;padding:16px 24px;text-align:center;background:#fafbfc;border-radius:0 0 8px 8px">'
+    +'<div style="font-size:13px;margin-bottom:6px"><a href="https://financetaskboard.github.io/ginesys/" style="color:#1f73e6;font-weight:600;text-decoration:none">Access to Portal</a></div>'
+    +'<div style="font-size:10px;color:#80868b">Ginesysone Finance - Do not reply to this email</div>'
+    +'</td></tr>'
+    +'</table></td></tr></table></body></html>';
+}
 function buildDigestPlain(name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC){
   const lines=['Hi '+name+', here is your daily digest:\n'];
   const sec=(label,items,kind)=>{if(!items.length)return;lines.push('── '+label+' ──');items.forEach(it=>lines.push('• '+(kind==='comp'?it.name:it.title)+' | Due: '+(it.due||'—')));lines.push('');};
@@ -3211,17 +3247,27 @@ window.sendManualDigest=async function(){
     for(const m of members){
       if(!m.email)continue;
       const todayT   =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due===today);
-      const overdueT =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due<today);
+      const noDueT   =tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&!t.due);
+      const overdueT =[...tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due<today),...noDueT];
       const upcomingT=tasks.filter(t=>!t.archived&&t.assigneeId===m.id&&t.status!=='done'&&t.due&&t.due>today&&t.due<=soon);
+      // Compliance items
       const todayC   =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due===today);
       const overdueC =complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due<today);
       const upcomingC=complianceItems.filter(c=>c.assigneeId===m.id&&c.status!=='completed'&&c.due&&c.due>today&&c.due<=soon);
-      if(!todayT.length&&!overdueT.length&&!upcomingT.length&&!todayC.length&&!overdueC.length&&!upcomingC.length)continue;
-      const digestHtml=buildDigestHtml(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
-      const digestPlain=buildDigestPlain(m.name,todayT,overdueT,upcomingT,todayC,overdueC,upcomingC);
+      // Audit items (auditSubs with dueDate field)
+      const mAudit=(typeof auditSubs!=='undefined'?auditSubs:[]).filter(a=>a.assigneeId===m.id&&a.done!==true).map(a=>({...a,due:a.dueDate,name:a.subTask||a.mainTask||'Audit Task'}));
+      const todayA   =mAudit.filter(a=>a.due===today);
+      const overdueA =[...mAudit.filter(a=>a.due&&a.due<today),...mAudit.filter(a=>!a.due)];
+      const upcomingA=mAudit.filter(a=>a.due&&a.due>today&&a.due<=soon);
+      const allTodayC=[...todayC,...todayA];
+      const allOverdueC=[...overdueC,...overdueA];
+      const allUpcomingC=[...upcomingC,...upcomingA];
+      if(!todayT.length&&!overdueT.length&&!upcomingT.length&&!allTodayC.length&&!allOverdueC.length&&!allUpcomingC.length)continue;
+      const digestHtml=buildDigestHtml(m.name,todayT,overdueT,upcomingT,allTodayC,allOverdueC,allUpcomingC);
+      const digestPlain=buildDigestPlain(m.name,todayT,overdueT,upcomingT,allTodayC,allOverdueC,allUpcomingC);
       await fetch(cfg.gasUrl,{method:'POST',headers:{'Content-Type':'text/plain'},
         body:JSON.stringify({action:'digest',to_email:m.email,to_name:m.name,
-          subject:'Daily Digest - '+dateLabel,
+          subject:'Your Daily Digest - '+dateLabel,
           html:digestHtml,plain:digestPlain,
           cc_email:(cfg.ccEmail&&cfg.ccEmail!==m.email)?cfg.ccEmail:null})});
       sent++;
@@ -3253,7 +3299,7 @@ window.toggleDigestPreview=function(){
   document.getElementById('digestPreviewBody').innerHTML=html;
   const now=new Date();
   const sub=document.getElementById('digestPreviewSubject');
-  if(sub) sub.textContent='Subject: \uD83D\uDCCB Daily Digest — '+now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  if(sub) sub.textContent='Subject: Your Daily Digest - '+now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
 };
 
 // Auto-check digest status when email modal opens
