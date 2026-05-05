@@ -921,6 +921,10 @@ select option{background:var(--white);color:var(--ink)}
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="9" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5" opacity=".6"/><path d="M5 5h5M5 8h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".8"/><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".3"/><path d="M11 12h2M12 11v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
           Audit
         </button>
+        <button class="lp-nav-item" id="nav_contracts" onclick="switchView('contracts')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="10" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5" opacity=".7"/><path d="M5 5h6M5 7.5h6M5 10h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".8"/><circle cx="12.5" cy="12.5" r="2.5" fill="currentColor" opacity=".35"/><path d="M11.8 12.5h1.4M12.5 11.8v1.4" stroke="white" stroke-width="1" stroke-linecap="round"/></svg>
+          Contracts
+        </button>
       </div>
 
       <!-- ── DIVIDER ── -->
@@ -1487,6 +1491,285 @@ select option{background:var(--white);color:var(--ink)}
                   </td></tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CONTRACT MANAGEMENT VIEW ═══ -->
+      <div id="contractsView" style="display:none;flex:1;overflow:hidden">
+        <div class="compliance-page">
+          <!-- ROW 1: Title + Action Buttons -->
+          <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0">
+            <div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:.95rem;font-weight:800;letter-spacing:-.03em;color:var(--ink)">📝 Contract Management</div>
+              <div style="font-size:.63rem;color:var(--ink-dim);margin-top:1px">Track contracts · Auto-renewal alerts · 15-day expiry notifications</div>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+              <button class="btn btn-ghost btn-sm" onclick="exportContractsCSV()" style="width:auto;font-size:.75rem;padding:5px 10px">↓ Export</button>
+              <button class="btn btn-ghost btn-sm" id="ctBulkBtn" onclick="openBulkUploadModal()" style="width:auto;font-size:.75rem;padding:5px 10px;color:var(--purple);border-color:var(--purple-border)">↑ Bulk Upload</button>
+              <button class="btn btn-primary btn-sm" id="ctAddBtn" onclick="openContractModal()" style="width:auto;font-size:.75rem;padding:5px 12px">＋ Add Contract</button>
+            </div>
+          </div>
+          <!-- ROW 2: Filters -->
+          <div style="background:var(--bg);border-bottom:1.5px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
+            <div style="position:relative;flex:2;min-width:120px">
+              <span style="position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:.68rem;opacity:.4">🔍</span>
+              <input class="search-input ct-filter-input" id="ctSearch" placeholder="Search party, type, contact…" oninput="renderContracts()" style="width:100%;padding:4px 8px 4px 24px;font-size:.76rem;height:28px">
+            </div>
+            <select class="input ct-filter-input" id="ctFilterType" onchange="renderContracts()" style="flex:1.2;min-width:100px;font-size:.75rem;padding:4px 24px 4px 7px;height:28px">
+              <option value="">All Types</option>
+              <option>Service Agreement</option><option>Vendor Contract</option>
+              <option>Employment Contract</option><option>Lease Agreement</option>
+              <option>NDA</option><option>SLA</option><option>AMC</option>
+              <option>Purchase Order</option><option>Other</option>
+            </select>
+            <select class="input ct-filter-input" id="ctFilterStatus" onchange="renderContracts()" style="flex:1;min-width:90px;font-size:.75rem;padding:4px 24px 4px 7px;height:28px">
+              <option value="">All Status</option>
+              <option value="active">✅ Active</option>
+              <option value="expiring">⚠ Expiring</option>
+              <option value="expired">🔴 Expired</option>
+              <option value="renewed">🔁 Renewed</option>
+            </select>
+            <select class="input ct-filter-input" id="ctFilterAssignee" onchange="renderContracts()" style="flex:1.2;min-width:100px;font-size:.75rem;padding:4px 24px 4px 7px;height:28px">
+              <option value="">All Assigned</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="clearContractFilters()" style="width:auto;font-size:.72rem;padding:4px 9px;height:28px;color:var(--ink-dim)">✕ Clear</button>
+          </div>
+          <!-- STAT BAR -->
+          <div style="display:flex;align-items:stretch;background:var(--surface);border-bottom:1.5px solid var(--border);flex-shrink:0;min-height:46px">
+            <div class="tstat-card" style="padding:6px 0" onclick="document.getElementById('ctFilterStatus').value='';renderContracts()">
+              <span class="tstat-num" style="color:var(--ink);font-size:.95rem" id="ctstat_total">0</span>
+              <span class="tstat-lbl">Total</span>
+            </div>
+            <div class="tstat-divider"></div>
+            <div class="tstat-card" style="padding:6px 0" onclick="document.getElementById('ctFilterStatus').value='active';renderContracts()">
+              <span class="tstat-num" style="color:var(--green);font-size:.95rem" id="ctstat_active">0</span>
+              <span class="tstat-lbl">Active</span>
+            </div>
+            <div class="tstat-divider"></div>
+            <div class="tstat-card" style="padding:6px 0" onclick="document.getElementById('ctFilterStatus').value='expiring';renderContracts()">
+              <span class="tstat-num" style="color:var(--amber);font-size:.95rem" id="ctstat_expiring">0</span>
+              <span class="tstat-lbl">Expiring ≤15d</span>
+            </div>
+            <div class="tstat-divider"></div>
+            <div class="tstat-card" style="padding:6px 0" onclick="document.getElementById('ctFilterStatus').value='expired';renderContracts()">
+              <span class="tstat-num" style="color:var(--red);font-size:.95rem" id="ctstat_expired">0</span>
+              <span class="tstat-lbl">Expired</span>
+            </div>
+            <div class="tstat-divider"></div>
+            <div class="tstat-card" style="padding:6px 0" onclick="document.getElementById('ctFilterStatus').value='renewed';renderContracts()">
+              <span class="tstat-num" style="color:var(--blue);font-size:.95rem" id="ctstat_renewed">0</span>
+              <span class="tstat-lbl">Renewed</span>
+            </div>
+          </div>
+          <!-- TABLE -->
+          <div class="c-content-scroll" style="padding:10px 12px">
+            <div class="compliance-table-wrap" style="overflow-x:auto">
+              <table id="contractTable" style="width:100%;border-collapse:collapse;table-layout:fixed;min-width:780px">
+                <thead>
+                  <tr style="background:var(--surface2);border-bottom:1.5px solid var(--border)">
+                    <th style="width:34px;padding:8px 6px;text-align:center;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">#</th>
+                    <th style="width:165px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Party Name</th>
+                    <th style="width:115px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Type</th>
+                    <th style="width:78px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Agmt Date</th>
+                    <th style="width:72px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Start</th>
+                    <th style="width:72px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">End</th>
+                    <th style="width:78px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Renew</th>
+                    <th style="width:82px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Value (₹)</th>
+                    <th style="width:138px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Assigned · Doc</th>
+                    <th style="width:88px;padding:8px 8px;text-align:left;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Status</th>
+                    <th style="width:58px;padding:8px 8px;text-align:center;font-size:.58rem;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink-mid)">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="contractTableBody">
+                  <tr><td colspan="11">
+                    <div class="compliance-empty">
+                      <div class="compliance-empty-icon">📝</div>
+                      <div class="compliance-empty-title">No contracts yet</div>
+                      <div class="compliance-empty-sub">Click "+ Add Contract" or "↑ Bulk Upload" to get started.<br>Email reminders fire 15 days before expiry on weekdays.</div>
+                    </div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ BULK UPLOAD MODAL ══ -->
+      <div class="overlay" id="bulkUploadModal" style="display:none" onclick="if(event.target===this)closeBulkUploadModal()">
+        <div class="modal modal-lg" style="max-width:700px;max-height:90vh;overflow-y:auto">
+          <div class="modal-header" style="padding:18px 22px 12px">
+            <div>
+              <div class="modal-title">↑ Bulk Upload Contracts</div>
+              <div style="font-size:.73rem;color:var(--ink-dim);margin-top:3px">Upload multiple contracts at once via CSV file</div>
+            </div>
+            <button class="icon-btn" onclick="closeBulkUploadModal()">✕</button>
+          </div>
+          <div style="padding:0 22px 22px;display:flex;flex-direction:column;gap:16px">
+
+            <!-- Step 1: Download template -->
+            <div style="background:var(--blue-bg);border:1.5px solid var(--blue-border);border-radius:var(--radius);padding:14px 16px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                <div>
+                  <div style="font-weight:700;font-size:.84rem;color:var(--blue)">📥 Step 1 — Download the CSV Template</div>
+                  <div style="font-size:.72rem;color:var(--ink-mid);margin-top:3px">Fill in your contracts using this exact format, then upload below.</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="downloadContractTemplate()" style="width:auto;border-color:var(--blue-border);color:var(--blue)">↓ Download Template.csv</button>
+              </div>
+              <!-- Format reference -->
+              <div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;overflow-x:auto">
+                <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;margin-bottom:6px">CSV Column Format</div>
+                <table style="width:100%;border-collapse:collapse;font-size:.72rem;font-family:'JetBrains Mono',monospace">
+                  <thead><tr style="background:var(--bg2)">
+                    <th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--accent);font-weight:700">Column</th>
+                    <th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--ink-mid)">Required?</th>
+                    <th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--ink-mid)">Format / Example</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">Party_Name</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--red)">Required</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">Tata Consultancy Services</td></tr>
+                    <tr style="background:var(--bg)"><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">Contract_Type</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--red)">Required</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">Service Agreement / Vendor Contract / NDA / SLA / AMC / Lease Agreement / Employment Contract / Purchase Order / Other</td></tr>
+                    <tr><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">Agreement_Date</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-dim)">Optional</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">DD-MM-YYYY &nbsp;e.g. 01-04-2024</td></tr>
+                    <tr style="background:var(--bg)"><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">Start_Date</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-dim)">Optional</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">DD-MM-YYYY &nbsp;e.g. 01-04-2024</td></tr>
+                    <tr><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">End_Date</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--red)">Required</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">DD-MM-YYYY &nbsp;e.g. 31-03-2026</td></tr>
+                    <tr style="background:var(--bg)"><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">Renew_Date</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-dim)">Optional</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">DD-MM-YYYY — auto-filled 30d before End if blank</td></tr>
+                    <tr><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">Contract_Value</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-dim)">Optional</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">500000 (numbers only, no ₹ or commas)</td></tr>
+                    <tr style="background:var(--bg)"><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">Contact_Person</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-dim)">Optional</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">Ramesh Kumar / +91-9876543210</td></tr>
+                    <tr><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink);font-weight:600">Assigned_To_Email</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-dim)">Optional</td><td style="padding:3px 8px;border-bottom:1px solid var(--border);color:var(--ink-mid)">team@company.com (must match a member's email)</td></tr>
+                    <tr style="background:var(--bg)"><td style="padding:3px 8px;color:var(--ink);font-weight:600">Notes</td><td style="padding:3px 8px;color:var(--ink-dim)">Optional</td><td style="padding:3px 8px;color:var(--ink-mid)">Any remarks or key terms</td></tr>
+                    <tr><td style="padding:3px 8px;color:var(--ink);font-weight:600">Document_Link</td><td style="padding:3px 8px;color:var(--ink-dim)">Optional</td><td style="padding:3px 8px;color:var(--ink-mid)">Google Drive / SharePoint / OneDrive URL</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Step 2: Upload file -->
+            <div style="background:var(--bg);border:1.5px dashed var(--border2);border-radius:var(--radius);padding:14px 16px">
+              <div style="font-weight:700;font-size:.84rem;color:var(--ink);margin-bottom:8px">📤 Step 2 — Upload your filled CSV</div>
+              <input type="file" id="ctCsvFile" accept=".csv" style="display:none" onchange="previewCSV(this)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ctCsvFile').click()" style="width:auto">📎 Choose CSV File</button>
+                <span id="ctCsvFileName" style="font-size:.78rem;color:var(--ink-mid)">No file selected</span>
+              </div>
+            </div>
+
+            <!-- Preview area -->
+            <div id="ctCsvPreview" style="display:none">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-weight:700;font-size:.84rem;color:var(--ink)">👁 Step 3 — Preview &amp; Confirm</div>
+                <span id="ctCsvPreviewCount" style="font-size:.72rem;color:var(--ink-mid);font-family:'JetBrains Mono',monospace"></span>
+              </div>
+              <div id="ctCsvErrors" style="display:none;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;font-size:.75rem;color:var(--red)"></div>
+              <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow-x:auto;max-height:200px;overflow-y:auto">
+                <table id="ctCsvPreviewTable" style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:700px"></table>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+                <button class="btn btn-ghost btn-sm" onclick="closeBulkUploadModal()" style="width:auto">Cancel</button>
+                <button class="btn btn-primary btn-sm" id="ctBulkSaveBtn" onclick="bulkSaveContracts()" style="width:auto">✅ Import All Contracts →</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTRACT ADD/EDIT MODAL -->
+      <div class="overlay" id="contractModal" style="display:none" onclick="if(event.target===this)closeContractModal()">
+        <div class="modal modal-lg" style="max-width:680px">
+          <div class="modal-header">
+            <div class="modal-title" id="contractModalTitle">Add Contract</div>
+            <button class="icon-btn" onclick="closeContractModal()">✕</button>
+          </div>
+          <div class="form-body">
+            <input type="hidden" id="editContractId">
+            <div class="form-row">
+              <div class="fg">
+                <label>Name of Party *</label>
+                <input class="input" id="ctParty" placeholder="e.g. Tata Consultancy Services Ltd.">
+              </div>
+              <div class="fg">
+                <label>Type of Contract *</label>
+                <select class="input" id="ctType">
+                  <option value="">— Select Type —</option>
+                  <option>Service Agreement</option>
+                  <option>Vendor Contract</option>
+                  <option>Employment Contract</option>
+                  <option>Lease Agreement</option>
+                  <option>NDA</option>
+                  <option>SLA</option>
+                  <option>AMC</option>
+                  <option>Purchase Order</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
+              <div class="fg">
+                <label>Agreement Date</label>
+                <input class="input" type="date" id="ctAgreementDate">
+              </div>
+              <div class="fg">
+                <label>Start Date</label>
+                <input class="input" type="date" id="ctStartDate">
+              </div>
+              <div class="fg">
+                <label>End Date *</label>
+                <input class="input" type="date" id="ctEndDate" oninput="autoFillRenewDate()">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg">
+                <label>New / Renew Date</label>
+                <input class="input" type="date" id="ctRenewDate">
+                <div style="font-size:.68rem;color:var(--ink-dim);margin-top:3px">Auto-filled 30 days before End Date. Edit if needed.</div>
+              </div>
+              <div class="fg">
+                <label>Contract Value (₹)</label>
+                <input class="input" type="text" id="ctValue" placeholder="e.g. 5,00,000">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg">
+                <label>Contact Person</label>
+                <input class="input" id="ctContactPerson" placeholder="Name &amp; phone / email of counterparty contact">
+              </div>
+              <div class="fg">
+                <label>Assigned To (for expiry alerts)</label>
+                <select class="input" id="ctAssignee">
+                  <option value="">— Select Member —</option>
+                </select>
+                <div id="ctEmailNote" style="font-size:.68rem;color:var(--ink-dim);margin-top:3px">Email alert will be sent <strong>15 days before expiry</strong> on weekdays only. No email at assignment.</div>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Notes / Remarks</label>
+              <textarea class="input" id="ctRemarks" rows="2" placeholder="Key terms, renewal conditions, special notes…" style="resize:vertical"></textarea>
+            </div>
+
+            <!-- Document Link -->
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 14px">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+                <span style="font-size:1rem">📎</span>
+                <div style="font-size:.78rem;font-weight:700;color:var(--ink)">Document Link</div>
+                <span style="font-size:.66rem;color:var(--ink-dim);background:var(--bg2);padding:1px 7px;border-radius:99px;font-family:'JetBrains Mono',monospace">Google Drive / SharePoint / Any URL</span>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input class="input" id="ctDocLink" placeholder="Paste Google Drive / SharePoint / OneDrive link here…" style="flex:1;font-size:.82rem">
+                <button type="button" onclick="testDocLink()" class="btn btn-ghost btn-sm" style="width:auto;flex-shrink:0;color:var(--blue);border-color:var(--blue-border)">
+                  🔗 Test Link
+                </button>
+              </div>
+              <div id="ctDocLinkPreview" style="display:none;margin-top:8px;padding:8px 11px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius-sm);display:flex;align-items:center;gap:8px">
+                <span style="font-size:.9rem">✅</span>
+                <a id="ctDocLinkHref" href="#" target="_blank" rel="noopener noreferrer" style="font-size:.76rem;color:var(--green);font-weight:600;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" onclick="event.stopPropagation()">Open Document →</a>
+              </div>
+              <div style="font-size:.67rem;color:var(--ink-dim);margin-top:6px">💡 Share the Google Drive file as "Anyone with the link can view" before pasting.</div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-ghost" onclick="closeContractModal()">Cancel</button>
+              <button class="btn btn-primary" onclick="saveContract()" style="width:auto">Save Contract →</button>
             </div>
           </div>
         </div>
@@ -2597,6 +2880,7 @@ function subscribeAll(){
   subscribeCompliance();
   subscribeAudit();
   subscribeGoals();
+  subscribeContracts();
 }
 
 // ── RECURRING TASKS ──
@@ -4117,11 +4401,11 @@ window.exportReportPDF=function(){
 
 window.switchView=function(view){
   currentView=view;
-  const vMap={tasks:'block',activity:'flex',team:'flex',goals:'flex',report:'flex',compliance:'flex',audit:'flex'};
-  ['tasks','activity','team','goals','report','compliance','audit'].forEach(v=>{const el=document.getElementById(v+'View');if(el)el.style.display=v===view?vMap[v]:'none';});
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['tasks','activity','team','goals','report','compliance','audit'][i]===view));
+  const vMap={tasks:'block',activity:'flex',team:'flex',goals:'flex',report:'flex',compliance:'flex',audit:'flex',contracts:'flex'};
+  ['tasks','activity','team','goals','report','compliance','audit','contracts'].forEach(v=>{const el=document.getElementById(v+'View');if(el)el.style.display=v===view?vMap[v]:'none';});
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['tasks','activity','team','goals','report','compliance','audit','contracts'][i]===view));
   // Update left panel nav active state
-  ['tasks','activity','team','goals','report','compliance','audit'].forEach(v=>{
+  ['tasks','activity','team','goals','report','compliance','audit','contracts'].forEach(v=>{
     const el=document.getElementById('nav_'+v);
     if(el){el.classList.toggle('lp-active',v===view);}
   });
@@ -4138,9 +4422,10 @@ window.switchView=function(view){
   if(sidebarAddBtn){
     if(view==='compliance'){sidebarAddBtn.childNodes[sidebarAddBtn.childNodes.length-1].textContent=' Add Record';}
     else if(view==='audit'){sidebarAddBtn.childNodes[sidebarAddBtn.childNodes.length-1].textContent=' Add Item';}
+    else if(view==='contracts'){sidebarAddBtn.childNodes[sidebarAddBtn.childNodes.length-1].textContent=' Add Contract';}
     else{sidebarAddBtn.childNodes[sidebarAddBtn.childNodes.length-1].textContent=' Add New';}
   }
-  if(view==='activity')renderActivity();if(view==='team')renderTeam();if(view==='tasks'){if(currentDashboard==='notes')switchDashboard('team');else renderTasks();}if(view==='report')renderReport();if(view==='goals')renderGoals();if(view==='compliance')renderCompliance();if(view==='audit')renderAuditWork();
+  if(view==='activity')renderActivity();if(view==='team')renderTeam();if(view==='tasks'){if(currentDashboard==='notes')switchDashboard('team');else renderTasks();}if(view==='report')renderReport();if(view==='goals')renderGoals();if(view==='compliance')renderCompliance();if(view==='audit')renderAuditWork();if(view==='contracts')renderContracts();
 };
 
 // ══════════════════════════════════════════════
@@ -6532,6 +6817,595 @@ window.removeMember=async function(uid,name){
 // Legacy: disable self-claim (button removed from UI)
 window.claimAdminRole = function(){ toast('Admin role can only be assigned by an existing admin from the Team page.'); };
 
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// ── CONTRACT MANAGEMENT MODULE ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+
+let contractItems = [];
+
+// ── Firebase listener ──
+function subscribeContracts(){
+  onValue(ref(db,'contracts'), snap => {
+    contractItems = [];
+    if(snap.val()){
+      Object.entries(snap.val()).forEach(([k,v])=>{ if(v) contractItems.push({...v, id:k}); });
+    }
+    contractItems.sort((a,b)=>(a.ts||0)-(b.ts||0));
+    if(currentView==='contracts') renderContracts();
+    // Populate assignee filter
+    _ctPopulateAssigneeFilter();
+    // Check expiry reminders (runs on data load)
+    checkContractExpiryReminders();
+  });
+}
+
+function _ctPopulateAssigneeFilter(){
+  const sel=document.getElementById('ctFilterAssignee');
+  if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML=`<option value="">All</option>`+members.map(m=>`<option value="${m.id}" ${m.id===cur?'selected':''}>${esc(m.name)}</option>`).join('');
+}
+
+// ── Status helper ──
+function getContractStatus(c){
+  const today=new Date().toISOString().split('T')[0];
+  if(c.status==='renewed') return {label:'Renewed',color:'var(--blue)',bg:'var(--blue-bg)',border:'var(--blue-border)'};
+  if(!c.endDate) return {label:'Active',color:'var(--green)',bg:'var(--green-bg)',border:'var(--green-border)'};
+  if(c.endDate < today) return {label:'Expired',color:'var(--red)',bg:'var(--red-bg)',border:'var(--red-border)'};
+  // check if within 15 calendar days
+  const daysLeft=Math.ceil((new Date(c.endDate+'T00:00:00')-new Date())/(86400000));
+  if(daysLeft<=15) return {label:`Expiring (${daysLeft}d)`,color:'var(--amber)',bg:'var(--amber-bg)',border:'var(--amber-border)'};
+  return {label:'Active',color:'var(--green)',bg:'var(--green-bg)',border:'var(--green-border)'};
+}
+
+function ctStatusKey(c){
+  const s=getContractStatus(c);
+  if(s.label==='Renewed') return 'renewed';
+  if(s.label==='Expired') return 'expired';
+  if(s.label.startsWith('Expiring')) return 'expiring';
+  return 'active';
+}
+
+function fmtDateShort(d){
+  if(!d) return '—';
+  const dt=new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+}
+
+function fmtDate2(d){
+  if(!d) return '—';
+  return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function fmtCurrency(v){
+  if(!v) return '—';
+  const n=parseFloat((v+'').replace(/[^0-9.]/g,''));
+  if(isNaN(n)) return v;
+  return '₹ '+n.toLocaleString('en-IN');
+}
+
+window.testDocLink=function(){
+  const val=document.getElementById('ctDocLink').value.trim();
+  if(!val){toast('⚠ Please paste a document link first.');return;}
+  if(!val.startsWith('http')){toast('⚠ Link must start with https://');return;}
+  const prev=document.getElementById('ctDocLinkPreview');
+  const a=document.getElementById('ctDocLinkHref');
+  a.href=val;
+  a.textContent='Open Document → '+_shortUrl(val);
+  prev.style.display='flex';
+  toast('✅ Link looks good! Click "Open Document" to verify.');
+};
+
+function _shortUrl(url){
+  try{
+    const u=new URL(url);
+    // For Google Drive: show "Google Drive"
+    if(u.hostname.includes('drive.google.com')) return 'Google Drive';
+    if(u.hostname.includes('docs.google.com')) return 'Google Docs';
+    if(u.hostname.includes('sharepoint.com')) return 'SharePoint';
+    if(u.hostname.includes('onedrive.live.com')||u.hostname.includes('1drv.ms')) return 'OneDrive';
+    if(u.hostname.includes('dropbox.com')) return 'Dropbox';
+    // Default: show hostname
+    return u.hostname.replace('www.','');
+  }catch(e){return url.slice(0,40)+'…';}
+}
+
+window.clearContractFilters=function(){
+  ['ctSearch','ctFilterType','ctFilterStatus','ctFilterAssignee'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderContracts();
+};
+
+// ── Render table ──
+window.renderContracts=function(){
+  if(currentView!=='contracts') return;
+  const ctAddBtn=document.getElementById('ctAddBtn');
+  if(ctAddBtn) ctAddBtn.style.display=isAdmin()?'':'none';
+
+  const q=(document.getElementById('ctSearch')?.value||'').toLowerCase();
+  const typeF=document.getElementById('ctFilterType')?.value||'';
+  const statusF=document.getElementById('ctFilterStatus')?.value||'';
+  const assigneeF=document.getElementById('ctFilterAssignee')?.value||'';
+
+  let items=contractItems.filter(c=>{
+    if(!isAdmin()&&c.assigneeId&&c.assigneeId!==(currentUser?.uid)) return false;
+    if(q&&!((c.party||'').toLowerCase().includes(q))&&!((c.type||'').toLowerCase().includes(q))&&!((c.contactPerson||'').toLowerCase().includes(q))&&!((c.remarks||'').toLowerCase().includes(q))) return false;
+    if(typeF&&c.type!==typeF) return false;
+    if(assigneeF&&c.assigneeId!==assigneeF) return false;
+    if(statusF){const sk=ctStatusKey(c);if(sk!==statusF) return false;}
+    return true;
+  });
+
+  // Stat bar counts (all contracts, no status filter)
+  const allC=contractItems.filter(c=>!isAdmin()?(!c.assigneeId||c.assigneeId===(currentUser?.uid)):true);
+  const setCS=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setCS('ctstat_total', allC.length);
+  setCS('ctstat_active', allC.filter(c=>ctStatusKey(c)==='active').length);
+  setCS('ctstat_expiring', allC.filter(c=>ctStatusKey(c)==='expiring').length);
+  setCS('ctstat_expired', allC.filter(c=>ctStatusKey(c)==='expired').length);
+  setCS('ctstat_renewed', allC.filter(c=>ctStatusKey(c)==='renewed').length);
+
+  const tbody=document.getElementById('contractTableBody');
+  if(!items.length){
+    tbody.innerHTML=`<tr><td colspan="11"><div class="compliance-empty"><div class="compliance-empty-icon">📝</div><div class="compliance-empty-title">No contracts found</div><div class="compliance-empty-sub">Try adjusting filters or add a new contract.</div></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=items.map((c,i)=>{
+    const st=getContractStatus(c);
+    const assignee=members.find(m=>m.id===c.assigneeId);
+    const sk=ctStatusKey(c);
+    const endStyle=sk==='expired'?'color:var(--red);font-weight:700':sk==='expiring'?'color:var(--amber);font-weight:700':'color:var(--ink-mid)';
+    const rowBg=i%2===0?'background:var(--surface)':'background:var(--bg)';
+    return `<tr style="border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;${rowBg}" onclick="openContractModal('${c.id}')" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='${i%2===0?'var(--surface)':'var(--bg)'}'">
+
+      <td style="padding:9px 6px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--ink-dim);font-weight:600">${i+1}</td>
+
+      <td style="padding:9px 8px;overflow:hidden">
+        <div style="font-size:.79rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(c.party||'')}">${esc(c.party||'—')}</div>
+        ${c.contactPerson?`<div style="font-size:.63rem;color:var(--ink-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👤 ${esc(c.contactPerson)}</div>`:''}
+      </td>
+
+      <td style="padding:9px 8px;overflow:hidden">
+        <span style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);padding:2px 7px;border-radius:99px;font-size:.61rem;font-weight:700;font-family:'JetBrains Mono',monospace;white-space:nowrap;display:inline-block;max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${esc(c.type||'')}">${esc(c.type||'—')}</span>
+      </td>
+
+      <td style="padding:9px 8px;font-size:.71rem;color:var(--ink-mid);font-family:'JetBrains Mono',monospace;white-space:nowrap">${fmtDateShort(c.agreementDate)}</td>
+      <td style="padding:9px 8px;font-size:.71rem;color:var(--ink-mid);font-family:'JetBrains Mono',monospace;white-space:nowrap">${fmtDateShort(c.startDate)}</td>
+      <td style="padding:9px 8px;font-size:.71rem;font-family:'JetBrains Mono',monospace;white-space:nowrap;${endStyle}">${fmtDateShort(c.endDate)}</td>
+      <td style="padding:9px 8px;font-size:.71rem;color:var(--accent);font-family:'JetBrains Mono',monospace;white-space:nowrap;font-weight:600">${fmtDateShort(c.renewDate)}</td>
+      <td style="padding:9px 8px;font-size:.73rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.value?'₹'+Number((c.value+'').replace(/[^0-9.]/g,'')).toLocaleString('en-IN'):'—'}</td>
+
+      <!-- Assigned + Doc merged cell -->
+      <td style="padding:9px 8px;overflow:hidden" onclick="event.stopPropagation()">
+        <div style="display:flex;align-items:center;gap:5px">
+          ${assignee
+            ? `<div style="display:flex;align-items:center;gap:4px;min-width:0;flex:1">${av(assignee,18)}<span style="font-size:.72rem;color:var(--ink-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(assignee.name)}">${esc(assignee.name.split(' ')[0])}</span></div>`
+            : `<span style="font-size:.68rem;color:var(--ink-dim);flex:1">—</span>`
+          }
+          ${c.docLink
+            ? `<a href="${esc(c.docLink)}" target="_blank" rel="noopener noreferrer" title="Click to open document" style="flex-shrink:0;width:24px;height:24px;border:1.5px solid var(--green-border);background:var(--green-bg);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--green);text-decoration:none;cursor:pointer" onclick="event.stopPropagation()">📎</a>`
+            : `<span style="flex-shrink:0;width:24px;height:24px;border:1.5px dashed var(--border);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:.68rem;color:var(--ink-dim);opacity:.4" title="No document linked">📎</span>`
+          }
+        </div>
+      </td>
+
+      <!-- Status -->
+      <td style="padding:9px 8px">
+        <span style="display:inline-block;padding:3px 8px;border-radius:99px;font-size:.63rem;font-weight:700;font-family:'JetBrains Mono',monospace;background:${st.bg};color:${st.color};border:1px solid ${st.border};white-space:nowrap">${st.label}</span>
+      </td>
+
+      <!-- Actions: email + delete only (row click = edit) -->
+      <td style="padding:9px 8px;text-align:center" onclick="event.stopPropagation()">
+        <div style="display:flex;gap:4px;justify-content:center;align-items:center">
+          ${isAdmin()&&c.assigneeId
+            ? `<button title="Send Email Reminder" onclick="sendContractReminderEmail('${c.id}')" style="width:26px;height:26px;border:1.5px solid var(--blue-border);background:var(--blue-bg);border-radius:6px;cursor:pointer;font-size:.76rem;display:inline-flex;align-items:center;justify-content:center;color:var(--blue);transition:opacity .14s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">📧</button>`
+            : `<span style="width:26px;height:26px;display:inline-flex"></span>`
+          }
+          ${isAdmin()
+            ? `<button title="Delete Contract" onclick="deleteContract('${c.id}')" style="width:26px;height:26px;border:1.5px solid var(--red-border);background:var(--red-bg);border-radius:6px;cursor:pointer;font-size:.76rem;display:inline-flex;align-items:center;justify-content:center;color:var(--red);transition:opacity .14s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">🗑</button>`
+            : ''
+          }
+        </div>
+      </td>
+
+    </tr>`;
+  }).join('');
+};
+
+// ── Open modal ──
+window.openContractModal=function(cid){
+  const c=cid?contractItems.find(x=>x.id===cid):null;
+  if(!isAdmin()&&!cid){toast('Only admins can add new contracts.');return;}
+  document.getElementById('contractModalTitle').textContent=c?'Edit Contract':'Add Contract';
+  document.getElementById('editContractId').value=c?.id||'';
+  document.getElementById('ctParty').value=c?.party||'';
+  document.getElementById('ctType').value=c?.type||'';
+  document.getElementById('ctAgreementDate').value=c?.agreementDate||'';
+  document.getElementById('ctStartDate').value=c?.startDate||'';
+  document.getElementById('ctEndDate').value=c?.endDate||'';
+  document.getElementById('ctRenewDate').value=c?.renewDate||'';
+  document.getElementById('ctValue').value=c?.value||'';
+  document.getElementById('ctContactPerson').value=c?.contactPerson||'';
+  document.getElementById('ctRemarks').value=c?.remarks||'';
+  document.getElementById('ctDocLink').value=c?.docLink||'';
+  // Reset doc link preview
+  const prev=document.getElementById('ctDocLinkPreview');
+  if(prev) prev.style.display='none';
+  if(c?.docLink){
+    const a=document.getElementById('ctDocLinkHref');
+    if(a){a.href=c.docLink;a.textContent='Open Document → '+_shortUrl(c.docLink);}
+    if(prev) prev.style.display='flex';
+  }
+  const asel=document.getElementById('ctAssignee');
+  asel.innerHTML=`<option value="">— Select Member —</option>`+members.map(m=>`<option value="${m.id}" ${c?.assigneeId===m.id?'selected':''}>${esc(m.name)}</option>`).join('');
+  document.getElementById('contractModal').style.display='flex';
+  setTimeout(()=>document.getElementById('ctParty').focus(),50);
+};
+window.closeContractModal=function(){document.getElementById('contractModal').style.display='none';};
+
+// ── Auto fill renew date (30 days before end) ──
+window.autoFillRenewDate=function(){
+  const endVal=document.getElementById('ctEndDate').value;
+  if(!endVal) return;
+  const ren=document.getElementById('ctRenewDate');
+  if(ren.value) return; // don't override if already set
+  const d=new Date(endVal+'T00:00:00');
+  d.setDate(d.getDate()-30);
+  // skip weekends
+  if(d.getDay()===6) d.setDate(d.getDate()-1);
+  if(d.getDay()===0) d.setDate(d.getDate()-2);
+  ren.value=d.toISOString().split('T')[0];
+};
+
+// ── Save contract ──
+window.saveContract=async function(){
+  const saveBtn=document.querySelector('#contractModal .btn-primary');
+  try{
+    // Role check — show helpful message
+    if(!isAdmin()){toast('⚠ Only admins can save contracts.');return;}
+
+    const party=document.getElementById('ctParty').value.trim();
+    const type=document.getElementById('ctType').value;
+    if(!party){alert('Please enter the Name of Party!');return;}
+    if(!type){alert('Please select a Type of Contract!');return;}
+    const endDate=document.getElementById('ctEndDate').value||null;
+    if(!endDate){alert('Please enter the End Date!');return;}
+
+    // Disable button to prevent double-click
+    if(saveBtn){saveBtn.textContent='Saving…';saveBtn.disabled=true;}
+
+    const eid=document.getElementById('editContractId').value;
+    const assigneeId=document.getElementById('ctAssignee').value||null;
+    const assigneeMember=assigneeId?members.find(m=>m.id===assigneeId):null;
+
+    const data={
+      party,
+      type,
+      agreementDate:document.getElementById('ctAgreementDate').value||null,
+      startDate:document.getElementById('ctStartDate').value||null,
+      endDate,
+      renewDate:document.getElementById('ctRenewDate').value||null,
+      value:document.getElementById('ctValue').value.trim()||null,
+      contactPerson:document.getElementById('ctContactPerson').value.trim()||null,
+      assigneeId:assigneeId||null,
+      assigneeName:assigneeMember?.name||null,
+      assigneeEmail:assigneeMember?.email||null,
+      remarks:document.getElementById('ctRemarks').value.trim()||null,
+      docLink:document.getElementById('ctDocLink').value.trim()||null,
+      status:'active',
+      updatedAt:Date.now()
+    };
+
+    if(eid){
+      await update(ref(db,`contracts/${eid}`),data);
+      toast('✅ Contract updated!');
+    } else {
+      const newId=uid();
+      const payload={...data,id:newId,ts:Date.now(),createdBy:currentUser?.uid||null,reminderSent:false,reminderSentAt:null};
+      await set(ref(db,`contracts/${newId}`),payload);
+      toast('✅ Contract saved! Email reminder will be sent 15 days before expiry on weekdays.');
+    }
+    closeContractModal();
+
+  }catch(err){
+    console.error('saveContract error:',err);
+    // Show a clear error to the user
+    const msg=err?.message||'Unknown error';
+    if(msg.toLowerCase().includes('permission')||msg.toLowerCase().includes('denied')){
+      alert('⚠ Firebase Permission Denied!\n\nYou need to add "contracts" to your Firebase Realtime Database rules.\n\nGo to Firebase Console → Realtime Database → Rules and add:\n\n"contracts": {\n  ".read": "auth != null",\n  ".write": "auth != null"\n}\n\nSee the full instructions in the Info button on this page.');
+    } else {
+      alert('Error saving contract:\n'+msg);
+    }
+  }finally{
+    if(saveBtn){saveBtn.textContent='Save Contract →';saveBtn.disabled=false;}
+  }
+};
+
+// ── Mark renewed ──
+window.markContractRenewed=async function(cid){
+  if(!isAdmin()) return;
+  if(!confirm('Mark this contract as Renewed?')) return;
+  await update(ref(db,`contracts/${cid}`),{status:'renewed',updatedAt:Date.now(),reminderSent:false});
+  toast('🔁 Contract marked as Renewed!');
+};
+
+// ── Delete ──
+window.deleteContract=async function(cid){
+  if(!isAdmin()) return;
+  if(!confirm('Delete this contract? This cannot be undone.')) return;
+  await remove(ref(db,`contracts/${cid}`));
+  toast('🗑 Contract deleted');
+};
+
+// ── CSV Export ──
+window.exportContractsCSV=function(){
+  const headers=['S.No','Name of Party','Type of Contract','Agreement Date','Start Date','End Date','Renew Date','Contract Value','Contact Person','Assigned To','Status'];
+  const rows=contractItems.map((c,i)=>{
+    const assignee=members.find(m=>m.id===c.assigneeId);
+    const st=getContractStatus(c);
+    return [i+1,`"${(c.party||'').replace(/"/g,'""')}"`,c.type||'',c.agreementDate||'',c.startDate||'',c.endDate||'',c.renewDate||'',c.value||'',`"${(c.contactPerson||'').replace(/"/g,'""')}"`,assignee?`"${assignee.name}"`:'',st.label].join(',');
+  });
+  const csv=[headers.join(','),...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`contracts-${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ Contracts CSV exported!');
+};
+
+// ── Manual reminder ──
+window.sendContractReminderEmail=async function(cid){
+  const c=contractItems.find(x=>x.id===cid);
+  if(!c||!c.assigneeId){toast('⚠ No assignee set for this contract.');return;}
+  const assignee=members.find(m=>m.id===c.assigneeId);
+  if(!assignee||!assignee.email){toast('⚠ Assignee has no email configured.');return;}
+  const cfg=getEmailConfig();
+  if(!cfg){toast('⚠ Email not configured. Set up Google Apps Script first.');return;}
+  const daysLeft=c.endDate?Math.ceil((new Date(c.endDate+'T00:00:00')-new Date())/86400000):null;
+  await _sendContractEmail(c, assignee, daysLeft, true);
+  toast(`📧 Reminder sent to ${assignee.name}`);
+};
+
+async function _sendContractEmail(c, assignee, daysLeft, isManual){
+  const cfg=getEmailConfig();
+  if(!cfg) return;
+  const subject=isManual
+    ? `📝 Contract Reminder: ${c.party}`
+    : `⏰ Contract Expiring in ${daysLeft} days: ${c.party}`;
+  const context=isManual
+    ? `Manual reminder for contract with ${c.party}.`
+    : `⚠ This contract is expiring in ${daysLeft} day${daysLeft!==1?'s':''} on ${c.endDate}. Please take action.`;
+  try{
+    await fetch(cfg.gasUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        to_email:assignee.email,
+        to_name:assignee.name,
+        task_title:`[Contract] ${c.party}`,
+        task_priority:'High',
+        task_status:'Active',
+        task_due:c.endDate||'—',
+        context,
+        assigned_by:'Ginesysone Finance — Contract Management',
+        cc_email:cfg.ccEmail||null
+      })
+    });
+  }catch(e){console.warn('Contract email send failed:',e);}
+}
+
+// ── Auto expiry check (15 days, weekdays only) ──
+function isWeekday(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const day=d.getDay(); // 0=Sun, 6=Sat
+  return day>=1&&day<=5;
+}
+
+async function checkContractExpiryReminders(){
+  const cfg=getEmailConfig();
+  if(!cfg) return; // no email configured
+  const today=new Date().toISOString().split('T')[0];
+  if(!isWeekday(today)) return; // only run on weekdays
+
+  for(const c of contractItems){
+    if(!c.assigneeId||!c.endDate) continue;
+    if(c.status==='renewed'||c.status==='expired') continue;
+    if(c.reminderSent) continue; // already sent this cycle
+
+    const daysLeft=Math.ceil((new Date(c.endDate+'T00:00:00')-new Date())/86400000);
+    if(daysLeft<=15&&daysLeft>0){
+      const assignee=members.find(m=>m.id===c.assigneeId);
+      if(assignee&&assignee.email){
+        await _sendContractEmail(c, assignee, daysLeft, false);
+        // Mark reminder sent so we don't spam every page load
+        await update(ref(db,`contracts/${c.id}`),{reminderSent:true,reminderSentAt:Date.now()});
+        console.log(`Contract reminder sent for ${c.party} → ${assignee.email} (${daysLeft} days left)`);
+      }
+    }
+    // Reset reminderSent flag once contract is past 15-day window (or if renewed)
+    if(daysLeft>15&&c.reminderSent){
+      await update(ref(db,`contracts/${c.id}`),{reminderSent:false});
+    }
+  }
+}
+
+// Run check every hour
+setInterval(checkContractExpiryReminders, 3600000);
+
+// ── Bulk Upload ──────────────────────────────────────────────────────────
+let _csvParsed = [];
+
+window.openBulkUploadModal=function(){
+  if(!isAdmin()){toast('Only admins can bulk upload contracts.');return;}
+  document.getElementById('ctCsvFile').value='';
+  document.getElementById('ctCsvFileName').textContent='No file selected';
+  document.getElementById('ctCsvPreview').style.display='none';
+  _csvParsed=[];
+  document.getElementById('bulkUploadModal').style.display='flex';
+};
+window.closeBulkUploadModal=function(){document.getElementById('bulkUploadModal').style.display='none';};
+
+window.downloadContractTemplate=function(){
+  const header='Party_Name,Contract_Type,Agreement_Date,Start_Date,End_Date,Renew_Date,Contract_Value,Contact_Person,Assigned_To_Email,Notes,Document_Link';
+  const sample=[
+    'Tata Consultancy Services,Service Agreement,01-04-2024,01-04-2024,31-03-2026,01-03-2026,500000,Ramesh Kumar / +91-9876543210,team@company.com,Annual IT support contract,https://drive.google.com/file/d/XXXXX/view',
+    'ABC Realty Pvt Ltd,Lease Agreement,15-01-2024,01-02-2024,31-01-2027,01-01-2027,1200000,Priya Singh / 9999988888,,Office premises lease,',
+    'XYZ Vendors,Vendor Contract,01-06-2024,01-06-2024,31-05-2025,,,250000,,,',
+  ].join('\n');
+  const csv=header+'\n'+sample;
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='Contract_Upload_Template.csv';a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ Template downloaded! Fill in your contracts and upload.');
+};
+
+// Parse DD-MM-YYYY or YYYY-MM-DD → YYYY-MM-DD
+function _parseDateStr(s){
+  if(!s||!s.trim()) return null;
+  s=s.trim();
+  // DD-MM-YYYY or DD/MM/YYYY
+  const m1=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m1) return `${m1[3]}-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
+  // YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  return null;
+}
+
+window.previewCSV=function(input){
+  const file=input.files[0];
+  if(!file){return;}
+  document.getElementById('ctCsvFileName').textContent=file.name;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const text=e.target.result;
+    const lines=text.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2){
+      document.getElementById('ctCsvErrors').style.display='block';
+      document.getElementById('ctCsvErrors').textContent='⚠ File must have a header row and at least one data row.';
+      document.getElementById('ctCsvPreview').style.display='flex';
+      document.getElementById('ctCsvPreview').style.flexDirection='column';
+      return;
+    }
+    // Parse header
+    const headers=_splitCSVLine(lines[0]).map(h=>h.trim().toLowerCase().replace(/\s+/g,'_'));
+    const col=n=>headers.indexOf(n);
+
+    const errors=[];
+    const parsed=[];
+    for(let i=1;i<lines.length;i++){
+      if(!lines[i].trim()) continue;
+      const cells=_splitCSVLine(lines[i]);
+      const party=(cells[col('party_name')]||'').trim();
+      const type=(cells[col('contract_type')]||'').trim();
+      const endDate=_parseDateStr(cells[col('end_date')]);
+      if(!party){errors.push(`Row ${i+1}: Party Name is required`);continue;}
+      if(!type){errors.push(`Row ${i+1}: Contract Type is required`);continue;}
+      if(!endDate){errors.push(`Row ${i+1}: End Date is required and must be DD-MM-YYYY`);continue;}
+      // Renew date: use provided or auto 30d before end
+      let renewDate=_parseDateStr(cells[col('renew_date')]);
+      if(!renewDate&&endDate){
+        const d=new Date(endDate+'T00:00:00');d.setDate(d.getDate()-30);
+        if(d.getDay()===6)d.setDate(d.getDate()-1);
+        if(d.getDay()===0)d.setDate(d.getDate()-2);
+        renewDate=d.toISOString().split('T')[0];
+      }
+      const assigneeEmail=(cells[col('assigned_to_email')]||'').trim().toLowerCase();
+      const assigneeMember=assigneeEmail?members.find(m=>m.email&&m.email.toLowerCase()===assigneeEmail):null;
+      if(assigneeEmail&&!assigneeMember) errors.push(`Row ${i+1}: Email "${assigneeEmail}" not found in team members — will be left unassigned`);
+      parsed.push({
+        party, type,
+        agreementDate:_parseDateStr(cells[col('agreement_date')]),
+        startDate:_parseDateStr(cells[col('start_date')]),
+        endDate, renewDate,
+        value:(cells[col('contract_value')]||'').trim().replace(/[^0-9.]/g,'')||null,
+        contactPerson:(cells[col('contact_person')]||'').trim()||null,
+        assigneeId:assigneeMember?.id||null,
+        assigneeName:assigneeMember?.name||null,
+        assigneeEmail:assigneeMember?.email||null,
+        remarks:(cells[col('notes')]||'').trim()||null,
+        docLink:(cells[col('document_link')]||'').trim()||null,
+      });
+    }
+    _csvParsed=parsed;
+
+    // Show errors
+    const errEl=document.getElementById('ctCsvErrors');
+    if(errors.length){errEl.style.display='block';errEl.innerHTML='<strong>⚠ Warnings:</strong><br>'+errors.map(e=>`• ${esc(e)}`).join('<br>');}
+    else{errEl.style.display='none';}
+
+    // Show preview table
+    const tbl=document.getElementById('ctCsvPreviewTable');
+    const cols=['Party Name','Type','Agreement','Start','End','Renew','Value','Contact','Assigned To'];
+    tbl.innerHTML=`<thead><tr style="background:var(--bg2)">${cols.map(c=>`<th style="padding:5px 8px;text-align:left;font-size:.65rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--ink-mid);border-bottom:1px solid var(--border);white-space:nowrap">${c}</th>`).join('')}</tr></thead>
+    <tbody>${parsed.map((r,i)=>{
+      const bg=i%2===0?'':'background:var(--bg)';
+      const assignee=r.assigneeId?members.find(m=>m.id===r.assigneeId):null;
+      return`<tr style="${bg}">
+        <td style="padding:4px 8px;font-size:.73rem;font-weight:600;color:var(--ink);white-space:nowrap">${esc(r.party)}</td>
+        <td style="padding:4px 8px;font-size:.7rem;color:var(--blue)">${esc(r.type)}</td>
+        <td style="padding:4px 8px;font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--ink-mid)">${r.agreementDate||'—'}</td>
+        <td style="padding:4px 8px;font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--ink-mid)">${r.startDate||'—'}</td>
+        <td style="padding:4px 8px;font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--ink);font-weight:600">${r.endDate}</td>
+        <td style="padding:4px 8px;font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--accent)">${r.renewDate||'—'}</td>
+        <td style="padding:4px 8px;font-size:.68rem;color:var(--ink)">${r.value?'₹'+Number(r.value).toLocaleString('en-IN'):'—'}</td>
+        <td style="padding:4px 8px;font-size:.68rem;color:var(--ink-mid);white-space:nowrap">${esc(r.contactPerson||'—')}</td>
+        <td style="padding:4px 8px;font-size:.68rem;color:var(--ink-mid)">${assignee?esc(assignee.name):'<span style="color:var(--ink-dim)">Unassigned</span>'}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+
+    document.getElementById('ctCsvPreviewCount').textContent=`${parsed.length} contract${parsed.length!==1?'s':''} ready to import`;
+    document.getElementById('ctCsvPreview').style.display='flex';
+    document.getElementById('ctCsvPreview').style.flexDirection='column';
+    document.getElementById('ctBulkSaveBtn').disabled=parsed.length===0;
+  };
+  reader.readAsText(file);
+};
+
+function _splitCSVLine(line){
+  const result=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    if(line[i]==='"'){inQ=!inQ;}
+    else if(line[i]===','&&!inQ){result.push(cur.replace(/^"|"$/g,''));cur='';}
+    else{cur+=line[i];}
+  }
+  result.push(cur.replace(/^"|"$/g,''));
+  return result;
+}
+
+window.bulkSaveContracts=async function(){
+  if(!_csvParsed.length){toast('No valid contracts to import.');return;}
+  if(!isAdmin()){toast('Only admins can import contracts.');return;}
+  const btn=document.getElementById('ctBulkSaveBtn');
+  btn.textContent='Importing…';btn.disabled=true;
+  let saved=0;
+  try{
+    for(const r of _csvParsed){
+      const newId=uid();
+      await set(ref(db,`contracts/${newId}`),{
+        ...r,id:newId,status:'active',
+        ts:Date.now(),updatedAt:Date.now(),
+        createdBy:currentUser?.uid||null,
+        reminderSent:false,reminderSentAt:null,
+        docLink:r.docLink||null
+      });
+      saved++;
+    }
+    toast(`✅ ${saved} contract${saved!==1?'s':''} imported successfully!`);
+    closeBulkUploadModal();
+  }catch(err){
+    console.error('Bulk import error:',err);
+    if((err?.message||'').toLowerCase().includes('permission')){
+      alert('⚠ Firebase Permission Denied! Make sure "contracts" is in your Firebase rules.');
+    }else{
+      alert('Import error: '+(err?.message||'Unknown error'));
+    }
+    btn.textContent='✅ Import All Contracts →';btn.disabled=false;
+  }
+};
+
+// ── end CONTRACT MANAGEMENT MODULE ──────────────────────────────────────
 
 
 // ── FEATURE 7: Smart Due Date Suggestions ────────────────────────────────
