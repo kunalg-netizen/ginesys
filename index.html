@@ -7161,10 +7161,43 @@ window.sendContractReminderEmail=async function(cid){
   const assignee=members.find(m=>m.id===c.assigneeId);
   if(!assignee||!assignee.email){toast('⚠ Assignee has no email configured.');return;}
   const cfg=getEmailConfig();
-  if(!cfg){toast('⚠ Email not configured. Set up Google Apps Script first.');return;}
+  if(!cfg||!cfg.gasUrl){
+    alert('⚠ Email not configured!\n\nGo to Settings (⚙) → Email Config in the Finance app and paste your Google Apps Script Web App URL.\n\nThis is different from setting it up in the GAS editor — the app also needs to know the URL.');
+    return;
+  }
   const daysLeft=c.endDate?Math.ceil((new Date(c.endDate+'T00:00:00')-new Date())/86400000):null;
-  await _sendContractEmail(c, assignee, daysLeft, true);
-  toast(`📧 Reminder sent to ${assignee.name}`);
+  const context=daysLeft&&daysLeft>0
+    ?`Contract with ${c.party} is expiring in ${daysLeft} day${daysLeft!==1?'s':''} on ${c.endDate}. Please take action.`
+    :`Contract with ${c.party} has expired or is expiring very soon (${c.endDate}). Immediate action required.`;
+  try{
+    toast('📧 Sending reminder…');
+    const resp=await fetch(cfg.gasUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        to_email:assignee.email,
+        to_name:assignee.name,
+        task_title:`[Contract] ${c.party}`,
+        task_priority:'High',
+        task_status:'Active',
+        task_due:c.endDate||'—',
+        context,
+        assigned_by:'Ginesysone Finance — Contract Management',
+        cc_email:cfg.ccEmail||null
+      })
+    });
+    const data=await resp.json().catch(()=>({}));
+    if(data.success===false){
+      toast('❌ Email failed: '+(data.error||'Unknown error'));
+    } else {
+      toast(`✅ Reminder sent to ${assignee.name} (${assignee.email})`);
+      // Mark reminder sent in Firebase
+      await update(ref(db,`contracts/${cid}`),{reminderSent:true,reminderSentAt:Date.now()});
+    }
+  }catch(err){
+    console.error('Contract reminder error:',err);
+    toast('❌ Could not reach email server. Check your GAS URL in Email Config.');
+  }
 };
 
 async function _sendContractEmail(c, assignee, daysLeft, isManual){
